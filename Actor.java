@@ -11,7 +11,7 @@ public class Actor {
     //constructor
     public Actor(int id) {
         this.playerID = id;
-        this.currentRank = 1; // All players start at rank 1
+        //this.currentRank = new Gameboard method for setting rank;
         this.currentRole = null;
         this.points = new PointTracker();
         this.location = new PlayerLocation(id);
@@ -134,7 +134,7 @@ public class Actor {
      */
     public boolean inputUpgrade(int targetRank, String paymentType) {
         Room currentRoom = location.getCurrentRoom();
-        
+
         if (!(currentRoom instanceof CastingOffice)) {
             System.out.println("Must be in Casting Office to upgrade.");
             return false;
