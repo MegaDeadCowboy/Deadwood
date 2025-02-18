@@ -23,17 +23,10 @@ public class Actor {
      * @return boolean indicating if move was successful
      */
     public boolean inputMove(String destinationRoom) {
-        // Can't move if currently in a role
-        if (currentRole != null) {
-            System.out.println("Cannot move while working on a role.");
-            return false;
-        }
-        
         if (location.validatePlayerMove(destinationRoom) == true) {
             location.updatePlayerLocation(destinationRoom);
             System.out.println("Moved to " + destinationRoom);
             return true;
-
         }
 
         else {
@@ -48,12 +41,6 @@ public class Actor {
      * @return boolean indicating if role was successfully taken
      */
     public boolean inputRole(String roleName) {
-        // Can't take a role if already in one
-        if (currentRole != null) {
-            System.out.println("Already working on a role.");
-            return false;
-        }
-        
         // Get current room's set information and validate role
         Room currentRoom = location.getCurrentRoom();
         Set currentSet = currentRoom.getSet();
