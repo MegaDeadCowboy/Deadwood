@@ -1,4 +1,4 @@
-import Deadwood.Actor;
+
 
 //Model, contains points
 public class PointTracker {
@@ -21,5 +21,18 @@ public class PointTracker {
     public int calcTotalPoints() {
         // Implementation
         return 0;
+    }
+
+    //Getters
+    public int getPlayerCash() {
+        return playerCash;
+    }
+
+    public int getPlayerCredit() {
+        return playerCredit;
+    }
+
+    public int getRehearsalBonus() { 
+        return rehearsalBonus;
     }
 }
