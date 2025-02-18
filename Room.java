@@ -1,3 +1,5 @@
+
+//Model, contains set, player
 public class Room {
     private String roomID;
     private List<String> adjacentRooms;

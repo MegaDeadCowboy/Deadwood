@@ -1,3 +1,5 @@
+
+//Model, determines end of day and next players turn
 public class TurnTracker {
     private int currentPlayer;
     private List<Integer> playerOrder;

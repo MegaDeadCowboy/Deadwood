@@ -1,3 +1,5 @@
+
+//Model, contains points
 public class PointTracker {
     private int playerCash;
     private int playerCredit;

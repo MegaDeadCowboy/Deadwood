@@ -1,3 +1,5 @@
+
+//Model, tracks player locations
 public class PlayerLocation {
     private int playerID;
     private int roomID;

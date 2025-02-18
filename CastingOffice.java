@@ -1,3 +1,5 @@
+
+//Room containing upgrade
 public class CastingOffice extends Room {
     private List<String> upgrades;
     private List<Integer> upgradePrice;

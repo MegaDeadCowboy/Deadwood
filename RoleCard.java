@@ -1,3 +1,5 @@
+
+//contain Role Card info to be added into rooms
 public class RoleCard {
     private int sceneID;
     private String sceneName;

@@ -1,4 +1,5 @@
-// GameBoard.java
+
+// View
 import java.util.List;
 import java.util.Map;
 
