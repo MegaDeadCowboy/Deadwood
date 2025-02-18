@@ -1,3 +1,4 @@
+import Deadwood.Actor;
 
 //Model, contains points
 public class PointTracker {

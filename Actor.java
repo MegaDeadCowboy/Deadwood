@@ -4,6 +4,8 @@ public class Actor {
     private int playerID;
     private int currentRank;
     private String currentRole;
+
+    
     public void inputMove() {
         // Implementation
     }
