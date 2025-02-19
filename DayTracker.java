@@ -3,13 +3,19 @@
 public class DayTracker {
     private int currentDay;
     private int maxDay;
-    
-    public void updateDay() {
-        // Implementation
+
+    public DayTracker(int maxDay) {
+        this.currentDay = 1;
+        this.maxDay = maxDay;
     }
-    
+
+    public void updateDay() {
+        if (currentDay < maxDay) {
+            currentDay++;
+        }
+    }
+
     public boolean gameEnd() {
-        // Implementation
-        return false;
+        return currentDay >= maxDay;
     }
 }
