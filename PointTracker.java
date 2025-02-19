@@ -6,7 +6,7 @@ public class PointTracker {
     private int playerCredit;
     private int rehearsalBonus;
     
-    public void setStartingPoints() {
+    public void setStartingPoints(int id, int credits) {
         // Implementation
     }
     

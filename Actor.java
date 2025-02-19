@@ -9,9 +9,9 @@ public class Actor {
     private PointTracker points;
     
     //constructor
-    public Actor(int id) {
+    public Actor(int id, int rank) {
         this.playerID = id;
-        //this.currentRank = new Gameboard method for setting rank;
+        this.currentRank = rank;
         this.currentRole = null;
         this.points = new PointTracker();
         this.location = new PlayerLocation(id);

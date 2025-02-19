@@ -5,11 +5,25 @@ public class DayTracker {
     private int maxDay;
     
     public void updateDay() {
-        // Implementation
+        currentDay++;
+        if (gameEnd()){
+            for (i = 1 to playerCount) {
+                //player(i).calcTotalPoints;
+                //determine winner
+            }
+        }
+        // first, reset player location to trailer
+        // reset role cards 
+        // start turn tracker 
+
     }
     
     public boolean gameEnd() {
-        // Implementation
-        return false;
+        if (currentDay == maxDay) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }
