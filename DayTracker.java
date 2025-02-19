@@ -3,7 +3,12 @@
 public class DayTracker {
     private int currentDay;
     private int maxDay;
-    
+
+    public DayTracker(int maxDay) {
+        this.currentDay = 1;
+        this.maxDay = maxDay;
+    }
+
     public void updateDay() {
         currentDay++;
         if (gameEnd()){
@@ -17,7 +22,7 @@ public class DayTracker {
         // start turn tracker 
 
     }
-    
+
     public boolean gameEnd() {
         if (currentDay == maxDay) {
             return true;
