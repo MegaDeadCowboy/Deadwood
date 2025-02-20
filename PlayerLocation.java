@@ -1,6 +1,7 @@
-
-//Model, tracks player locations
+// Model, tracks player locations
 // Fixing constructor in PlayerLocation.java
+import java.util.List;
+
 public class PlayerLocation {
     private int playerID;
     private int roomID;
@@ -14,20 +15,33 @@ public class PlayerLocation {
         this.currentRoom = null;
     }
     
-    public boolean validatePlayerMove(String roomID) {
-        // Implementation
-        return false;
+    public boolean validatePlayerMove(String destinationRoomID) {
+        if (currentRoom == null) {
+            System.out.println("Error: Player is not in a valid room.");
+            return false;
+        }
+
+        List<String> adjacentRooms = currentRoom.getAdjacentRooms();
+        if (adjacentRooms == null || !adjacentRooms.contains(destinationRoomID)) {
+            System.out.println("Invalid move. You can only move to adjacent rooms.");
+            return false;
+        }
+        return true;
     }
     
-    public void updatePlayerLocation(String roomID) {
-        // Implementation
+    public void updatePlayerLocation(Room newRoom) {
+        if (newRoom == null) {
+            System.out.println("Error: Cannot move to a null room.");
+            return;
+        }
+        this.currentRoom = newRoom;
     }
-
+    
     public Room getCurrentRoom(){
         return currentRoom;
     }
 
-    //getters
+    // Getters
     public int getPlayerID() {
         return playerID;
     }
@@ -37,12 +51,6 @@ public class PlayerLocation {
     }
 
     public boolean getOnRole() {
-        if (!onRole) {
-            return false;
-        }
-        else{
-            return true;
-        }
-         
+        return onRole;
     }
 }

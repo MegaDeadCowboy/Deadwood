@@ -24,60 +24,45 @@ public class GameBoard {
         // Create players with appropriate starting conditions
         for (int i = 1; i <= playerCount; i++) {
             Actor player = new Actor(i, 1);
-            PointTracker points = player.getPoints();
-            
-            // Set starting credits based on player count
-            if (playerCount <= 3) {
-                points.setStartingPoints(0, 0);
-
-            } else if (playerCount <= 5) {
-                points.setStartingPoints(0, 2);
-
-            } else if (playerCount == 6) {
-                points.setStartingPoints(0, 4);
-
-            } else {  // 7-8 players
-                player = new Actor(i, 2); 
-                points.setStartingPoints(0, 0);
-            }
-            
             players.add(player);
         }
-        
+    
         // Initialize rooms
         createRooms();
-        
-        // Initialize trackers
-        this.turnTracker = new TurnTracker(players, dayTracker, new Trailer());
+    
+        // Fix: Ensure players exist before initializing turnTracker
         this.dayTracker = new DayTracker(4);
-        
-        // Place all players in trailer
+        this.turnTracker = new TurnTracker(players, dayTracker, (Trailer) rooms.get("trailer"), this);
+
+    
+        // Fix: Ensure player locations are properly set
         resetPlayerLocations();
     }
     
     private void createRooms() {
         // Create and connect all rooms
-        // Trailer
-        Trailer trailer = new Trailer();
-        rooms.put("trailer", trailer);
-        
-        // Casting Office
-        CastingOffice office = new CastingOffice();
-        rooms.put("office", office);
-        
-        // Add other rooms and their connections
-        // setting up all the sets, their adjacent rooms,
-        // and their role cards
+        rooms.put("trailer", new Trailer());
+        rooms.put("office", new CastingOffice());
     }
     
     public void resetPlayerLocations() {
         Room trailer = rooms.get("trailer");
+    
+        if (trailer == null) {
+            System.out.println("Error: Trailer room not found.");
+            return;
+        }
+    
         for (Actor player : players) {
-            player.getLocation().updatePlayerLocation("trailer");
+            player.getLocation().updatePlayerLocation(trailer);
         }
     }
     
     public Actor getCurrentPlayer() {
+        if (players.isEmpty()) {
+            System.out.println("Error: No players found in game.");
+            return null;
+        }
         return turnTracker.getCurrentPlayer();
     }
     
@@ -92,6 +77,9 @@ public class GameBoard {
     
     public void endTurn() {
         turnTracker.endTurn();
-                // Reset scene cards and other day-specific items
-            }
     }
+    
+    public Room getRoomByID(String roomID) {
+        return rooms.get(roomID);
+    }
+}

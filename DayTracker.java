@@ -10,20 +10,25 @@ public class DayTracker {
         this.maxDay = maxDay;
     }
 
-    public void updateDay(List<Actor> players, Trailer trailer) {
+    public void updateDay(List<Actor> players, Trailer trailer, GameBoard gameBoard) {
         currentDay++;
+    
         if (gameEnd()) {
             System.out.println("Game Over! Calculating final scores...");
             for (Actor player : players) {
-                System.out.println("Player " + player.getPlayerID() + " Score: " + player.getPoints().calcTotalPoints(player.getCurrentRank()));
+                System.out.println("Player " + player.getPlayerID() + " Score: " 
+                    + player.getPoints().calcTotalPoints(player.getCurrentRank()));
             }
+            System.out.println("Game has ended. Thank you for playing!");
+            System.exit(0);
             return;
         }
-
-        // Reset players to the trailer
-        trailer.resetPlayerLocations(players);
+    
+        trailer.resetPlayerLocations(players, gameBoard);
+    
         System.out.println("New day begins!");
     }
+    
 
     public boolean gameEnd() {
         if (currentDay == maxDay) {

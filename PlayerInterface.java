@@ -15,15 +15,20 @@ public class PlayerInterface {
     }
     
     public void processCommand() {
+        if (currentPlayer == null) {
+            System.out.println("Error: No player is set. Please ensure the game is properly initialized.");
+            return;
+        }
+    
         System.out.print("> ");
         String input = scanner.nextLine().toLowerCase().trim();
         String[] parts = input.split("\\s+");
         String command = parts[0];
-        
+    
         switch (command) {
             case "who":
                 displayPlayerInfo();
-                break;
+                break;    
                 
             case "where":
                 displayLocation();
@@ -35,7 +40,8 @@ public class PlayerInterface {
                     return;
                 }
                 String destination = String.join(" ", parts[1]);
-                currentPlayer.inputMove(destination);
+                currentPlayer.inputMove(destination, gameBoard);
+
                 break;
                 
             case "work":
@@ -98,10 +104,17 @@ public class PlayerInterface {
     private void displayLocation() {
         PlayerLocation location = currentPlayer.getLocation();
         Room currentRoom = location.getCurrentRoom();
+    
+        // Fix: Check if the player has a valid room assigned
+        if (currentRoom == null) {
+            System.out.println("Error: Player is not in a valid room.");
+            return;
+        }
+    
         Set currentSet = currentRoom.getSet();
-        
+    
         if (currentSet != null && currentSet.isActive()) {
-            System.out.printf("%s shooting Scene %d%n", 
+            System.out.printf("%s shooting Scene %d%n",
                 currentRoom.getRoomID(),
                 currentSet.getRoleCard().getSceneID()
             );
@@ -109,4 +122,4 @@ public class PlayerInterface {
             System.out.println(currentRoom.getRoomID());
         }
     }
-}
+}    

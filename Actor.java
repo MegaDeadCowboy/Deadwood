@@ -20,18 +20,33 @@ public class Actor {
     }
     
 
-    public boolean inputMove(String destinationRoom) {
-        if (location.validatePlayerMove(destinationRoom) == true) {
-            location.updatePlayerLocation(destinationRoom);
-            System.out.println("Moved to " + destinationRoom);
-            return true;
+    public boolean inputMove(String destinationRoomID, GameBoard gameBoard) {
+        if (location.getCurrentRoom() == null) {
+            System.out.println("Error: You are not in a valid room.");
+            return false;
         }
-
-        else {
+    
+        List<String> adjacentRoomNames = location.getCurrentRoom().getAdjacentRooms();
+        
+        if (!adjacentRoomNames.contains(destinationRoomID)) {
             System.out.println("Invalid move - not an adjacent room.");
             return false;
         }
+    
+        // Fix: Get the actual Room object
+        Room destinationRoom = gameBoard.getRoomByID(destinationRoomID);
+        if (destinationRoom == null) {
+            System.out.println("Error: Destination room not found.");
+            return false;
+        }
+    
+        location.updatePlayerLocation(destinationRoom);
+        System.out.println("Moved to " + destinationRoomID);
+        return true;
     }
+    
+    
+    
     
 
     public boolean inputRole(String roleName) {
