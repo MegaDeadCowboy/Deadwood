@@ -17,11 +17,7 @@ public class Actor {
         this.location = new PlayerLocation(id);
     }
     
-    /**
-     * Processes a move command from the player
-     * @param destinationRoom The room the player wants to move to
-     * @return boolean indicating if move was successful
-     */
+
     public boolean inputMove(String destinationRoom) {
         if (location.validatePlayerMove(destinationRoom) == true) {
             location.updatePlayerLocation(destinationRoom);
@@ -35,11 +31,7 @@ public class Actor {
         }
     }
     
-    /**
-     * Attempts to take a role on the current set
-     * @param roleName Name of the role to take
-     * @return boolean indicating if role was successfully taken
-     */
+
     public boolean inputRole(String roleName) {
         // Get current room's set information and validate role
         Room currentRoom = location.getCurrentRoom();
@@ -64,11 +56,7 @@ public class Actor {
             return false;
         }
     }
-    
-    /**
-     * Attempts to perform in current role
-     * @return boolean indicating if acting was successful
-     */
+
     public boolean inputAttemptScene() {
         if (currentRole == null) {
             System.out.println("Not currently in a role.");
@@ -97,11 +85,7 @@ public class Actor {
             return false;
         }
     }
-    
-    /**
-     * Adds a rehearsal token for the current role
-     * @return boolean indicating if rehearsal was successful
-     */
+
     public boolean inputRehearse() {
         if (currentRole == null) {
             System.out.println("Not currently in a role.");
@@ -113,12 +97,7 @@ public class Actor {
         return true;
     }
     
-    /**
-     * Attempts to upgrade rank at the casting office
-     * @param targetRank The rank to upgrade to
-     * @param paymentType "credits" or "cash"
-     * @return boolean indicating if upgrade was successful
-     */
+
     public boolean inputUpgrade(int targetRank, String paymentType) {
         Room currentRoom = location.getCurrentRoom();
 

@@ -4,7 +4,7 @@ public class PlayerLocation {
     private int playerID;
     private int roomID;
     private boolean onRole;
-    // private room currentRoom ? should it have a room? or just id to find it?
+    private Room currentRoom;
 
     //constructor
     public PlayerLocation(int ID) {
@@ -23,9 +23,8 @@ public class PlayerLocation {
         // Implementation
     }
 
-    public room getCurrentRoom(int ID){
-        //find room based on ID
-        return room;
+    public Room getCurrentRoom(){
+        return currentRoom;
     }
 
     //getters
@@ -38,6 +37,12 @@ public class PlayerLocation {
     }
 
     public boolean getOnRole() {
-        return onRole;
+        if (!onRole) {
+            return false;
+        }
+        else{
+            return true;
+        }
+         
     }
 }
