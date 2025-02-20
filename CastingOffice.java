@@ -1,16 +1,53 @@
+//Room containing upgrade
+import java.util.ArrayList;
 import java.util.List;
 
-//Room containing upgrade
 public class CastingOffice extends Room {
     private List<String> upgrades;
     private List<Integer> upgradePrice;
-    
-    public boolean validateUpgrade(int currentRank, int targetRank, String paymentType, PointTracker cost) {
-        // Implementation
-        return false;
+
+    public CastingOffice() {
+        super("Casting Office", new ArrayList<>()); 
+        this.upgrades = new ArrayList<>();
+        this.upgradePrice = new ArrayList<>();
+        
+        // Example upgrade prices (you should adjust based on game rules)
+        upgradePrice.add(5);  // Rank 1 -> Rank 2
+        upgradePrice.add(10); // Rank 2 -> Rank 3
+        upgradePrice.add(15); // Rank 3 -> Rank 4
+        upgradePrice.add(20); // Rank 4 -> Rank 5
     }
-    
-    public void checkOut(PointTracker cost, int targetRank, String paymentType) {
-        // Implementation
+
+    public boolean validateUpgrade(int currentRank, int targetRank, String paymentType, PointTracker cost) {
+        int rankDiff = targetRank - currentRank;
+        
+        if (rankDiff <= 0 || rankDiff > upgradePrice.size()) {
+            return false; // Invalid upgrade
+        }
+
+        int price = upgradePrice.get(rankDiff - 1);
+
+        return paymentType.equals("cash") 
+            ? cost.getPlayerCash() >= price 
+            : cost.getPlayerCredit() >= price;
+    }
+
+    public void checkOut(int currentRank, PointTracker cost, int targetRank, String paymentType) {
+        int rankDiff = targetRank - currentRank;
+
+        if (rankDiff <= 0 || rankDiff > upgradePrice.size()) {
+            System.out.println("Invalid upgrade selection.");
+            return;
+        }
+
+        int price = upgradePrice.get(rankDiff - 1);
+
+        if (paymentType.equals("cash")) {
+            cost.makePayment(price, false);
+        } else {
+            cost.makePayment(price, true);
+        }
+
+        System.out.println("Upgrade successful! Now Rank: " + targetRank);
     }
 }

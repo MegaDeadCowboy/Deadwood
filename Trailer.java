@@ -1,10 +1,11 @@
 
 //Start of game
+import java.util.ArrayList;
 import java.util.List;
 
 public class Trailer extends Room {
     public Trailer() {
-        super("Trailer"); // Inherit roomID from Room
+        super("Trailer", new ArrayList<>());
     }
 
     /**
@@ -15,7 +16,7 @@ public class Trailer extends Room {
      */
     public void resetPlayerLocations(List<Actor> players) {
         for (Actor player : players) {
-            player.getLocation().updatePlayerLocation(this); // Move player to Trailer
+            player.getLocation().updatePlayerLocation("Trailer"); // Move player to Trailer
         }
         System.out.println("All players have been reset to the Trailer.");
     }

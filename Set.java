@@ -6,18 +6,23 @@ public class Set {
     private int extraRoles;
     private boolean isActive;
 
-    public Set(){
+    public Set(RoleCard roleCard, int shotCounter, int extraRoles) {
         this.roleCard = roleCard;
         this.shotCounter = shotCounter;
         this.extraRoles = extraRoles;
-        this.isActive = isActive;
+        this.isActive = true; // Default to active when created
     }
 
-    public void decrementShots(){
+    public void decrementShots() {
         --shotCounter;
-        if (shotCounter == 0 ) {
+        if (shotCounter == 0) {
             awardSceneBonus();
+            isActive = false; // Scene completed
         }
+    }
+
+    private void awardSceneBonus() {
+        System.out.println("Scene bonus awarded!");
     }
 
     //getters

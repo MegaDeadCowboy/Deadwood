@@ -1,4 +1,6 @@
 //many imports necessary
+import java.util.Random; // For rollDice()
+import java.util.List; // If List is used in future updates
 
 //Controller, takes commands from user
 public class Actor {
@@ -45,7 +47,8 @@ public class Actor {
         // Validate role rank against player rank
         RoleCard roleCard = currentSet.getRoleCard();
 
-        if (roleCard.validateRole(roleName, currentRank)) {
+        if (roleCard.validateRole(roleName, currentRank, getRoleRank(roleName))) {
+
             currentRole = roleName;
             System.out.println("Now working as " + roleName);
             return true;
@@ -110,7 +113,7 @@ public class Actor {
 
         if (office.validateUpgrade(currentRank, targetRank, paymentType, points)) {
             currentRank = targetRank;
-            office.checkOut(points, targetRank, paymentType);
+            office.checkOut(currentRank, points, targetRank, paymentType);
             System.out.println("Successfully upgraded to rank " + targetRank);
             return true;
         }
@@ -146,5 +149,11 @@ public class Actor {
     public PointTracker getPoints() { 
         return points; 
     }
+    
+    public int getRoleRank(String roleName) {
+        // Implement logic to return the role's required rank
+        return 2; // Example: Hardcode for now or implement proper logic
+    }
+    
 
 }

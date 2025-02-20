@@ -1,3 +1,4 @@
+import java.util.List;
 
 //Model, determines end of game, starts new day
 public class DayTracker {
@@ -9,18 +10,19 @@ public class DayTracker {
         this.maxDay = maxDay;
     }
 
-    public void updateDay() {
+    public void updateDay(List<Actor> players, Trailer trailer) {
         currentDay++;
-        if (gameEnd()){
-            for (i = 1 to playerCount) {
-                //player(i).calcTotalPoints;
-                //determine winner
+        if (gameEnd()) {
+            System.out.println("Game Over! Calculating final scores...");
+            for (Actor player : players) {
+                System.out.println("Player " + player.getPlayerID() + " Score: " + player.getPoints().calcTotalPoints(player.getCurrentRank()));
             }
+            return;
         }
-        // first, reset player location to trailer
-        // reset role cards 
-        // start turn tracker 
 
+        // Reset players to the trailer
+        trailer.resetPlayerLocations(players);
+        System.out.println("New day begins!");
     }
 
     public boolean gameEnd() {

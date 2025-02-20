@@ -23,7 +23,7 @@ public class GameBoard {
     public void initiateBoardState() {
         // Create players with appropriate starting conditions
         for (int i = 1; i <= playerCount; i++) {
-            Actor player = new Actor(i);
+            Actor player = new Actor(i, 1);
             PointTracker points = player.getPoints();
             
             // Set starting credits based on player count
@@ -48,7 +48,7 @@ public class GameBoard {
         createRooms();
         
         // Initialize trackers
-        this.turnTracker = new TurnTracker(playerCount);
+        this.turnTracker = new TurnTracker(players, dayTracker, new Trailer());
         this.dayTracker = new DayTracker(4);
         
         // Place all players in trailer
@@ -58,11 +58,11 @@ public class GameBoard {
     private void createRooms() {
         // Create and connect all rooms
         // Trailer
-        Trailer trailer = new Trailer("trailer");
+        Trailer trailer = new Trailer();
         rooms.put("trailer", trailer);
         
         // Casting Office
-        CastingOffice office = new CastingOffice("office");
+        CastingOffice office = new CastingOffice();
         rooms.put("office", office);
         
         // Add other rooms and their connections
@@ -78,7 +78,7 @@ public class GameBoard {
     }
     
     public Actor getCurrentPlayer() {
-        return players.get(turnTracker.getCurrentPlayer() - 1);
+        return turnTracker.getCurrentPlayer();
     }
     
     public Room getRoom(String roomID) {
@@ -94,6 +94,4 @@ public class GameBoard {
         turnTracker.endTurn();
                 // Reset scene cards and other day-specific items
             }
-        }
     }
-}

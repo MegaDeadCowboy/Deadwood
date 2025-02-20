@@ -19,6 +19,7 @@ public class TurnTracker {
         this.dayTracker = dayTracker;
         this.trailer = trailer;
         this.currentPlayerIndex = 0;
+
     }
 
     /**
@@ -40,7 +41,7 @@ public class TurnTracker {
      * Advances to a new day and resets game state.
      */
     private void initiateNewDay() {
-        dayTracker.updateDay();
+        dayTracker.updateDay(players, new Trailer());
         if (dayTracker.gameEnd()) {
             System.out.println("Game Over! Calculating final scores...");
             return;
