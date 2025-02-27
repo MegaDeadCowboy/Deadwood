@@ -1,23 +1,37 @@
-//Room containing upgrade
 import java.util.ArrayList;
 import java.util.List;
 
-public class CastingOffice extends Room {
+/**
+ * Location where players can upgrade their rank
+ */
+public class CastingOffice extends BasicRoom {
     private List<String> upgrades;
     private List<Integer> upgradePrice;
-
+    
     public CastingOffice() {
-        super("Casting Office", new ArrayList<>()); 
+        super("Casting Office", new ArrayList<>());
+        initializeUpgrades();
+    }
+    
+    public CastingOffice(List<String> adjacentRooms) {
+        super("Casting Office", adjacentRooms);
+        initializeUpgrades();
+    }
+    
+    private void initializeUpgrades() {
         this.upgrades = new ArrayList<>();
         this.upgradePrice = new ArrayList<>();
         
-        // Example upgrade prices (you should adjust based on game rules)
+        // Example upgrade prices
         upgradePrice.add(5);  // Rank 1 -> Rank 2
         upgradePrice.add(10); // Rank 2 -> Rank 3
         upgradePrice.add(15); // Rank 3 -> Rank 4
         upgradePrice.add(20); // Rank 4 -> Rank 5
     }
-
+    
+    /**
+     * Validate if a player can upgrade their rank
+     */
     public boolean validateUpgrade(int currentRank, int targetRank, String paymentType, PointTracker cost) {
         int rankDiff = targetRank - currentRank;
         
@@ -32,6 +46,9 @@ public class CastingOffice extends Room {
             : cost.getPlayerCredit() >= price;
     }
 
+    /**
+     * Process the payment for a rank upgrade
+     */
     public void checkOut(int currentRank, PointTracker cost, int targetRank, String paymentType) {
         int rankDiff = targetRank - currentRank;
 

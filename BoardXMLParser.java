@@ -15,73 +15,6 @@ public class BoardXMLParser {
         this.doc = doc;
     }
     
-    public Map<String, Room> parseRooms() {
-        Map<String, Room> rooms = new HashMap<>();
-        Element root = doc.getDocumentElement();
-        
-        // Parse regular sets
-        NodeList sets = root.getElementsByTagName("set");
-        for (int i = 0; i < sets.getLength(); i++) {
-            Element setElement = (Element) sets.item(i);
-            String setName = setElement.getAttribute("name");
-            List<String> adjacentRooms = parseNeighbors(setElement);
-            
-            // Create a new Room for each set
-            Room room = new Room(setName, adjacentRooms);
-            rooms.put(setName.toLowerCase(), room);
-            
-            // Parse takes for the set
-            int takes = parseTakes(setElement);
-            
-            // Parse parts for the set
-            List<Map<String, Object>> parts = parseParts(setElement);
-            
-            // Create a RoleCard for the set
-            // You'll need to implement this part based on your RoleCard class
-            RoleCard roleCard = new RoleCard();
-            // Set up the RoleCard with parts info
-            
-            // Create a Set for the room
-            Set set = new Set(roleCard, takes, parts.size());
-            room.assignSet(set);
-            
-            System.out.println("Parsed set: " + setName + " with " + adjacentRooms.size() + 
-                    " neighbors and " + parts.size() + " parts.");
-        }
-        
-        // Parse special locations: trailer
-        Element trailerElement = (Element) root.getElementsByTagName("trailer").item(0);
-        if (trailerElement != null) {
-            List<String> trailerNeighbors = parseNeighbors(trailerElement);
-            Trailer trailer = new Trailer();
-            // Add neighbors to trailer
-            for (String neighbor : trailerNeighbors) {
-                trailer.getAdjacentRooms().add(neighbor.toLowerCase());
-            }
-            rooms.put("trailer", trailer);
-            System.out.println("Parsed trailer with " + trailerNeighbors.size() + " neighbors.");
-        }
-        
-        // Parse special locations: office
-        Element officeElement = (Element) root.getElementsByTagName("office").item(0);
-        if (officeElement != null) {
-            List<String> officeNeighbors = parseNeighbors(officeElement);
-            CastingOffice office = new CastingOffice();
-            // Add neighbors to office
-            for (String neighbor : officeNeighbors) {
-                office.getAdjacentRooms().add(neighbor.toLowerCase());
-            }
-            
-            // Parse upgrade info
-            parseUpgrades(officeElement, office);
-            
-            rooms.put("office", office);
-            System.out.println("Parsed office with " + officeNeighbors.size() + " neighbors.");
-        }
-        
-        return rooms;
-    }
-    
     private List<String> parseNeighbors(Element element) {
         List<String> neighbors = new ArrayList<>();
         Element neighborsElement = (Element) element.getElementsByTagName("neighbors").item(0);
@@ -158,5 +91,55 @@ public class BoardXMLParser {
             // You'll need to implement a way to set these in your CastingOffice class
             // This depends on your implementation
         }
+    }
+    
+    public Map<String, Room> parseRooms() {
+        Map<String, Room> rooms = new HashMap<>();
+        Element root = doc.getDocumentElement();
+        
+        // Parse regular sets
+        NodeList sets = root.getElementsByTagName("set");
+        for (int i = 0; i < sets.getLength(); i++) {
+            Element setElement = (Element) sets.item(i);
+            String setName = setElement.getAttribute("name");
+            List<String> adjacentRooms = parseNeighbors(setElement);
+            
+            // Create a FilmSetRoom
+            FilmSetRoom filmRoom = new FilmSetRoom(setName, adjacentRooms);
+            
+            // Add it to the map as Room (which it implements)
+            Room room = filmRoom;
+            rooms.put(setName.toLowerCase(), room);
+            
+            // Parse takes for the set
+            int takes = parseTakes(setElement);
+            // Parse parts for the set
+            List<Map<String, Object>> parts = parseParts(setElement);
+            
+            System.out.println("Parsed set: " + setName + " with " + adjacentRooms.size() + 
+                    " neighbors and " + parts.size() + " parts.");
+        }
+        
+        // Parse trailer - explicitly cast to Room
+        Element trailerElement = (Element) root.getElementsByTagName("trailer").item(0);
+        if (trailerElement != null) {
+            List<String> trailerNeighbors = parseNeighbors(trailerElement);
+            Trailer trailerObj = new Trailer(trailerNeighbors);
+            Room trailer = trailerObj;
+            rooms.put("trailer", trailer);
+            System.out.println("Parsed trailer with " + trailerNeighbors.size() + " neighbors.");
+        }
+        
+        // Parse office - explicitly cast to Room
+        Element officeElement = (Element) root.getElementsByTagName("office").item(0);
+        if (officeElement != null) {
+            List<String> officeNeighbors = parseNeighbors(officeElement);
+            CastingOffice castingOffice = new CastingOffice(officeNeighbors);
+            Room office = castingOffice;
+            rooms.put("office", office);
+            System.out.println("Parsed office with " + officeNeighbors.size() + " neighbors.");
+        }
+        
+        return rooms;
     }
 }

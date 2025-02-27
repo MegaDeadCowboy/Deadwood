@@ -116,6 +116,7 @@ public class Actor {
     }
     
 
+    // In Actor class or other classes that check room type
     public boolean inputUpgrade(int targetRank, String paymentType) {
         Room currentRoom = location.getCurrentRoom();
 
@@ -125,6 +126,7 @@ public class Actor {
         }
         
         CastingOffice office = (CastingOffice) currentRoom;
+        
 
         if (office.validateUpgrade(currentRank, targetRank, paymentType, points)) {
             currentRank = targetRank;

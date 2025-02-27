@@ -1,18 +1,21 @@
-
-//Start of game
 import java.util.ArrayList;
 import java.util.List;
 
-public class Trailer extends Room {
+/**
+ * Starting location for players
+ */
+public class Trailer extends BasicRoom {
+    
     public Trailer() {
         super("Trailer", new ArrayList<>());
     }
-
+    
+    public Trailer(List<String> adjacentRooms) {
+        super("Trailer", adjacentRooms);
+    }
+    
     /**
-     * Resets all player locations to the Trailer.
-     * This method should be called at the end of the day.
-     *
-     * @param players List of all Actors in the game.
+     * Reset all player locations to the Trailer at the start of a day
      */
     public void resetPlayerLocations(List<Actor> players, GameBoard gameBoard) {
         Room trailerRoom = gameBoard.getRoomByID("Trailer");
@@ -27,4 +30,4 @@ public class Trailer extends Room {
         }
         System.out.println("All players have been reset to the Trailer.");
     }
-}       
+}

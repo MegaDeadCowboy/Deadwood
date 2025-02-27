@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -81,5 +82,48 @@ public class GameBoard {
     
     public Room getRoomByID(String roomID) {
         return rooms.get(roomID);
+    }
+    /**
+ * Method to distribute role cards to sets at the beginning of a day
+ * @param cards List of role cards parsed from XML
+ */
+    private void distributeCards(List<RoleCard> cards) {
+    // Make a copy of the cards we can modify
+        List<RoleCard> availableCards = new ArrayList<>(cards);
+        
+        // Shuffle the cards to randomize distribution
+        Collections.shuffle(availableCards);
+        
+        // Find all rooms that can have sets (exclude trailer and office)
+        List<Room> setRooms = new ArrayList<>();
+        for (Map.Entry<String, Room> entry : rooms.entrySet()) {
+            Room room = entry.getValue();
+            if (!(room instanceof Trailer) && !(room instanceof CastingOffice)) {
+                setRooms.add(room);
+            }
+        }
+        
+        // Distribute cards to rooms
+        int cardIndex = 0;
+        for (Room room : setRooms) {
+            if (cardIndex < availableCards.size()) {
+                // Get the next card
+                RoleCard card = availableCards.get(cardIndex++);
+                
+                // Get the number of shots from the board XML (or use a default)
+                int shots = 3; // Default value - you might want to read this from XML
+                
+                // Create a set for this room with the card
+                Set set = new Set(card, shots, 0); // Assume no extra roles for now
+                
+                // Assign the set to the room
+                room.assignSet(set);
+                
+                System.out.println("Assigned scene '" + card.getSceneName() + 
+                        "' to room '" + room.getRoomID() + "'");
+            }
+        }
+        
+        System.out.println("Distributed " + cardIndex + " cards to sets");
     }
 }
