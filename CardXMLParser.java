@@ -1,12 +1,9 @@
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Node;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CardXMLParser {
     private Document doc;
@@ -37,74 +34,51 @@ public class CardXMLParser {
             String sceneDescription = sceneElement.getTextContent().trim();
             
             // Create a new RoleCard
-            RoleCard card = new RoleCard();
-            // You'll need to customize this based on your RoleCard implementation
-            // card.setSceneName(cardName);
-            // card.setSceneID(sceneNumber);
-            // card.setSceneBudget(budget);
+            RoleCard card = new RoleCard(
+                sceneNumber,   // sceneID
+                cardName,      // sceneName
+                sceneDescription, // sceneDescription
+                cardImg,       // cardImage
+                budget,        // sceneBudget
+                3              // totalShots (default value, might need to be set differently)
+            );
             
-            // Parse parts/roles
-            List<Map<String, Object>> roles = parseRoles(cardElement);
-            
-            // Add roles to the card
-            // This depends on your RoleCard implementation
+            // Parse roles
+            NodeList partNodes = cardElement.getElementsByTagName("part");
+            for (int j = 0; j < partNodes.getLength(); j++) {
+                Element partElement = (Element) partNodes.item(j);
+                
+                String roleName = partElement.getAttribute("name");
+                int roleLevel = Integer.parseInt(partElement.getAttribute("level"));
+                
+                Element lineElement = (Element) partElement.getElementsByTagName("line").item(0);
+                String roleLine = lineElement.getTextContent();
+                
+                // Add role to card
+                card.addRole(roleName, roleLevel, roleLine);
+            }
             
             cards.add(card);
             
             System.out.println("Parsed card: " + cardName + " (Scene " + sceneNumber + 
-                    ") with budget " + budget + " and " + roles.size() + " roles.");
+                    ") with budget " + budget + " and " + card.getSceneRoles().size() + " roles.");
         }
         
         return cards;
     }
     
-    private List<Map<String, Object>> parseRoles(Element cardElement) {
-        List<Map<String, Object>> roles = new ArrayList<>();
-        
-        NodeList partNodes = cardElement.getElementsByTagName("part");
-        for (int i = 0; i < partNodes.getLength(); i++) {
-            Element partElement = (Element) partNodes.item(i);
-            
-            Map<String, Object> role = new HashMap<>();
-            role.put("name", partElement.getAttribute("name"));
-            role.put("level", Integer.parseInt(partElement.getAttribute("level")));
-            
-            Element lineElement = (Element) partElement.getElementsByTagName("line").item(0);
-            role.put("line", lineElement.getTextContent());
-            
-            roles.add(role);
-        }
-        
-        return roles;
-    }
-    
-    // Utility method to get all card names
-    public List<String> getCardNames() {
-        List<String> cardNames = new ArrayList<>();
+    // Utility method to get all scene ids
+    public List<Integer> getAllSceneIDs() {
+        List<Integer> sceneIDs = new ArrayList<>();
         Element root = doc.getDocumentElement();
         
-        NodeList cardNodes = root.getElementsByTagName("card");
-        for (int i = 0; i < cardNodes.getLength(); i++) {
-            Element cardElement = (Element) cardNodes.item(i);
-            cardNames.add(cardElement.getAttribute("name"));
+        NodeList sceneNodes = root.getElementsByTagName("scene");
+        for (int i = 0; i < sceneNodes.getLength(); i++) {
+            Element sceneElement = (Element) sceneNodes.item(i);
+            int sceneNumber = Integer.parseInt(sceneElement.getAttribute("number"));
+            sceneIDs.add(sceneNumber);
         }
         
-        return cardNames;
-    }
-    
-    // Utility method to get scene budgets
-    public Map<String, Integer> getSceneBudgets() {
-        Map<String, Integer> budgets = new HashMap<>();
-        Element root = doc.getDocumentElement();
-        
-        NodeList cardNodes = root.getElementsByTagName("card");
-        for (int i = 0; i < cardNodes.getLength(); i++) {
-            Element cardElement = (Element) cardNodes.item(i);
-            String cardName = cardElement.getAttribute("name");
-            int budget = Integer.parseInt(cardElement.getAttribute("budget"));
-            budgets.put(cardName, budget);
-        }
-        
-        return budgets;
+        return sceneIDs;
     }
 }

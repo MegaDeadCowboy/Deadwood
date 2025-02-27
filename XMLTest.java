@@ -1,6 +1,5 @@
 import org.w3c.dom.Document;
 import java.util.List;
-import java.util.Map;
 
 public class XMLTest {
     public static void main(String[] args) {
@@ -11,24 +10,16 @@ public class XMLTest {
             Document cardsDoc = parser.getDocFromFile("cards.xml");
             
             CardXMLParser cardParser = new CardXMLParser(cardsDoc);
-            
-            // Get all card names
-            List<String> cardNames = cardParser.getCardNames();
-            System.out.println("\nScene Cards:");
-            for (String name : cardNames) {
-                System.out.println("- " + name);
-            }
-            
-            // Get all budgets
-            Map<String, Integer> budgets = cardParser.getSceneBudgets();
-            System.out.println("\nScene Budgets:");
-            for (Map.Entry<String, Integer> entry : budgets.entrySet()) {
-                System.out.println(entry.getKey() + ": $" + entry.getValue());
-            }
-            
-            // Parse all cards
             List<RoleCard> cards = cardParser.parseCards();
+            
             System.out.println("\nParsed " + cards.size() + " role cards.");
+            
+            // Print details of a few cards
+            System.out.println("\nSample card details:");
+            for (int i = 0; i < Math.min(3, cards.size()); i++) {
+                System.out.println("\n=== Card " + (i+1) + " ===");
+                System.out.println(cards.get(i));
+            }
             
         } catch (Exception e) {
             System.out.println("Error during XML parsing: " + e.getMessage());
