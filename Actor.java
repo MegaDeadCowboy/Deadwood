@@ -1,9 +1,7 @@
-//many imports necessary
-import java.util.Random; // For rollDice()
-import java.util.List; 
+import java.util.List;
 import java.util.ArrayList;
 
-//Controller, takes commands from user
+// This is the updated Actor class with improved movement logic
 public class Actor {
     private int playerID;
     private int currentRank;
@@ -11,7 +9,7 @@ public class Actor {
     private PlayerLocation location;
     private PointTracker points;
     
-    //constructor
+    // Constructor
     public Actor(int id, int rank) {
         this.playerID = id;
         this.currentRank = rank;
@@ -20,38 +18,60 @@ public class Actor {
         this.location = new PlayerLocation(id);
     }
     
-
     public boolean inputMove(String destinationRoomID, GameBoard gameBoard) {
         if (location.getCurrentRoom() == null) {
+            System.out.println("Error: Player not in a valid room.");
             return false;
         }
-    
-        List<String> adjacentRoomNames = location.getCurrentRoom().getAdjacentRooms();
-        List<String> normalizedNeighbors = new ArrayList<>();
         
+        // Debug output to help troubleshoot
+        Room currentRoom = location.getCurrentRoom();
+        // System.out.println("Debug - Current room: " + currentRoom.getRoomID());
+        // System.out.println("Debug - Attempting to move to: " + destinationRoomID);
+        
+        // Get and normalize adjacent room names
+        List<String> adjacentRoomNames = currentRoom.getAdjacentRooms();
+        // System.out.println("Debug - Adjacent rooms: " + adjacentRoomNames);
+        
+        List<String> normalizedNeighbors = new ArrayList<>();
         for (String neighbor : adjacentRoomNames) {
             normalizedNeighbors.add(neighbor.toLowerCase());
         }
-    
-        if (!normalizedNeighbors.contains(destinationRoomID.toLowerCase())) {
-            return false;
-        }
-    
-        Room destinationRoom = gameBoard.getRoomByID(destinationRoomID.toLowerCase());
-        if (destinationRoom == null) {
-            return false;
-        }
-    
-        location.updatePlayerLocation(destinationRoom);
         
-        // ✅ Add a success message back
-        System.out.println("You moved to " + destinationRoomID + ".");
+        // Check if destination is valid
+        if (!normalizedNeighbors.contains(destinationRoomID.toLowerCase())) {
+            System.out.println("Invalid destination. " + destinationRoomID + " is not adjacent to " + 
+                currentRoom.getRoomID());
+            return false;
+        }
+        
+        // Find the destination room (case insensitive)
+        Room destinationRoom = null;
+        // First try exact match
+        destinationRoom = gameBoard.getRoomByID(destinationRoomID.toLowerCase());
+        
+        if (destinationRoom == null) {
+            // If exact match fails, try to find a case-insensitive match
+            for (String roomName : gameBoard.getAllRoomNames()) {
+                if (roomName.equalsIgnoreCase(destinationRoomID)) {
+                    destinationRoom = gameBoard.getRoomByID(roomName);
+                    break;
+                }
+            }
+        }
+        
+        if (destinationRoom == null) {
+            System.out.println("Error: Cannot find room " + destinationRoomID);
+            return false;
+        }
+        
+        // Update player location
+        location.updatePlayerLocation(destinationRoom);
+        System.out.println("You moved to " + destinationRoom.getRoomID() + ".");
         
         return true;
     }
     
-    
-
     public boolean inputRole(String roleName) {
         // Get current room's set information and validate role
         Room currentRoom = location.getCurrentRoom();
@@ -66,12 +86,10 @@ public class Actor {
         RoleCard roleCard = currentSet.getRoleCard();
 
         if (roleCard.validateRole(roleName, currentRank, getRoleRank(roleName))) {
-
             currentRole = roleName;
             System.out.println("Now working as " + roleName);
             return true;
         }
-
         else {
             System.out.println("Cannot take this role - rank too low or role unavailable.");
             return false;
@@ -99,7 +117,6 @@ public class Actor {
             currentSet.decrementShots();
             return true;
         }
-
         else {
             points.awardActingPoints(false, currentRole.equals("extra"));
             System.out.println("Acting failed. Roll: " + totalRoll + " vs Budget: " + budget);
@@ -118,8 +135,6 @@ public class Actor {
         return true;
     }
     
-
-    // In Actor class or other classes that check room type
     public boolean inputUpgrade(int targetRank, String paymentType) {
         Room currentRoom = location.getCurrentRoom();
 
@@ -130,14 +145,12 @@ public class Actor {
         
         CastingOffice office = (CastingOffice) currentRoom;
         
-
         if (office.validateUpgrade(currentRank, targetRank, paymentType, points)) {
             currentRank = targetRank;
             office.checkOut(currentRank, points, targetRank, paymentType);
             System.out.println("Successfully upgraded to rank " + targetRank);
             return true;
         }
-
         else {
             System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
             return false;
@@ -174,6 +187,4 @@ public class Actor {
         // Implement logic to return the role's required rank
         return 2; // Example: Hardcode for now or implement proper logic
     }
-    
-
 }

@@ -32,11 +32,13 @@ public class GameBoard {
         // Initialize rooms
         createRooms();
     
-        // Fix: Ensure players exist before initializing turnTracker
+        // Create dayTracker first
         this.dayTracker = new DayTracker(4);
+        
+        // Create turnTracker after players and dayTracker are initialized
         this.turnTracker = new TurnTracker(players, dayTracker, (Trailer) rooms.get("trailer"), this);
 
-        // Fix: Ensure player locations are properly set
+        // Set initial player locations
         resetPlayerLocations();
     }
     
@@ -53,7 +55,7 @@ public class GameBoard {
             return;  // Exit early if parsing fails
         }
     
-        Map<String, Room> parsedRooms = boardParser.parseRooms();  // Now this line works
+        Map<String, Room> parsedRooms = boardParser.parseRooms();
     
         // Store all parsed rooms in GameBoard
         for (Map.Entry<String, Room> entry : parsedRooms.entrySet()) {
@@ -109,9 +111,24 @@ public class GameBoard {
         return validMove;
     }
     
-    
-    public void endTurn() {
+    /**
+     * End the current player's turn and move to the next player
+     * @return The ID of the new current player
+     */
+    public int endTurn() {
+        System.out.println("Ending turn for Player " + getCurrentPlayer().getPlayerID());
+        
+        // Reset any per-turn state if needed
+        
+        // Use turnTracker to advance to the next player
         turnTracker.endTurn();
+        
+        // Get the new current player ID
+        int newPlayerID = getCurrentPlayer().getPlayerID();
+        
+        System.out.println("Starting turn for Player " + newPlayerID);
+        
+        return newPlayerID;
     }
     
     public Room getRoomByID(String roomID) {
@@ -164,5 +181,13 @@ public class GameBoard {
 
     public List<String> getAllRoomNames() {
         return new ArrayList<>(rooms.keySet());
+    }
+    
+    /**
+     * Get all players in the game
+     * @return List of all player actors
+     */
+    public List<Actor> getAllPlayers() {
+        return players;
     }
 }

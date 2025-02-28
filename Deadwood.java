@@ -22,7 +22,7 @@ public class Deadwood {
         GameBoard game = new GameBoard(numPlayers);
         PlayerInterface playerInterface = new PlayerInterface(game);
 
-        // Fix: Get the current player and check if it's null
+        // Get the current player and check if it's null
         Actor currentPlayer = game.getCurrentPlayer();
         if (currentPlayer == null) {
             System.out.println("Fatal Error: No player is set. Exiting game.");
@@ -31,12 +31,19 @@ public class Deadwood {
         playerInterface.setCurrentPlayer(currentPlayer);
 
         System.out.println("Game started with " + numPlayers + " players!");
+        System.out.println("Type 'help' for available commands.");
 
         // Start the game loop
         while (true) {
+            // Get the current player (may have changed after a turn ends)
+            currentPlayer = game.getCurrentPlayer();
+            playerInterface.setCurrentPlayer(currentPlayer);
+            
+            // Display a turn delimiter for clarity
+            System.out.println("\n====== Player " + currentPlayer.getPlayerID() + "'s Turn ======");
+            
+            // Process the current player's command
             playerInterface.processCommand();
         }
     }
 }
-
-
