@@ -4,7 +4,7 @@ import java.util.List;
 /**
  * Starting location for players
  */
-public class Trailer extends BasicRoom {
+public class Trailer extends Room {
     
     public Trailer() {
         super("Trailer", new ArrayList<>());

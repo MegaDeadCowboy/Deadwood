@@ -3,7 +3,7 @@ import java.util.List;
 /**
  * Standard room that can contain a film set
  */
-public class FilmSetRoom extends BasicRoom {
+public class FilmSetRoom extends Room {
     private int scenesCompleted;
     
     public FilmSetRoom(String roomID, List<String> adjacentRooms) {

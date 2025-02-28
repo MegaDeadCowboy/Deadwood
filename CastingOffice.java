@@ -4,7 +4,7 @@ import java.util.List;
 /**
  * Location where players can upgrade their rank
  */
-public class CastingOffice extends BasicRoom {
+public class CastingOffice extends Room {
     private List<String> upgrades;
     private List<Integer> upgradePrice;
     
