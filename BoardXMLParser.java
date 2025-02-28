@@ -115,9 +115,6 @@ public class BoardXMLParser {
             int takes = parseTakes(setElement);
             // Parse parts for the set
             List<Map<String, Object>> parts = parseParts(setElement);
-            
-            System.out.println("Parsed set: " + setName + " with " + adjacentRooms.size() + 
-                    " neighbors and " + parts.size() + " parts.");
         }
         
         // Parse trailer - explicitly cast to Room
@@ -125,10 +122,9 @@ public class BoardXMLParser {
         if (trailerElement != null) {
             List<String> trailerNeighbors = parseNeighbors(trailerElement);
             Trailer trailerObj = new Trailer(trailerNeighbors);
-            Room trailer = trailerObj;
-            rooms.put("trailer", trailer);
-            System.out.println("Parsed trailer with " + trailerNeighbors.size() + " neighbors.");
+            rooms.put("trailer", trailerObj);
         }
+
         
         // Parse office - explicitly cast to Room
         Element officeElement = (Element) root.getElementsByTagName("office").item(0);
@@ -137,7 +133,6 @@ public class BoardXMLParser {
             CastingOffice castingOffice = new CastingOffice(officeNeighbors);
             Room office = castingOffice;
             rooms.put("office", office);
-            System.out.println("Parsed office with " + officeNeighbors.size() + " neighbors.");
         }
         
         return rooms;

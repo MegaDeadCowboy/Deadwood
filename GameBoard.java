@@ -3,6 +3,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Document;
 
 public class GameBoard {
     private Map<String, Room> rooms;
@@ -35,17 +36,31 @@ public class GameBoard {
         this.dayTracker = new DayTracker(4);
         this.turnTracker = new TurnTracker(players, dayTracker, (Trailer) rooms.get("trailer"), this);
 
-    
         // Fix: Ensure player locations are properly set
         resetPlayerLocations();
     }
     
     private void createRooms() {
-        // Create and connect all rooms
-        rooms.put("trailer", new Trailer());
-        rooms.put("office", new CastingOffice());
-    }
+        BoardXMLParser boardParser = null;  // Declare boardParser outside try block
     
+        try {
+            ParseXML parser = new ParseXML();
+            Document doc = parser.getDocFromFile("board.xml");
+            boardParser = new BoardXMLParser(doc);  // Assign inside try block
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to parse board.xml - " + e.getMessage());
+            e.printStackTrace();
+            return;  // Exit early if parsing fails
+        }
+    
+        Map<String, Room> parsedRooms = boardParser.parseRooms();  // Now this line works
+    
+        // Store all parsed rooms in GameBoard
+        for (Map.Entry<String, Room> entry : parsedRooms.entrySet()) {
+            rooms.put(entry.getKey(), entry.getValue());
+        }
+    }
+
     public void resetPlayerLocations() {
         Room trailer = rooms.get("trailer");
     
@@ -72,9 +87,28 @@ public class GameBoard {
     }
     
     public boolean validatePlayerMove(String fromRoom, String toRoom) {
-        Room current = rooms.get(fromRoom);
-        return current != null && current.getAdjacentRooms().contains(toRoom);
+        Room current = rooms.get(fromRoom.toLowerCase());
+    
+        if (current == null) {
+            System.out.println("Error: Current room '" + fromRoom + "' not found.");
+            return false;
+        }
+    
+        // Convert all neighbor names to lowercase for case-insensitive comparison
+        List<String> normalizedNeighbors = new ArrayList<>();
+        for (String neighbor : current.getAdjacentRooms()) {
+            normalizedNeighbors.add(neighbor.toLowerCase());
+        }
+    
+        boolean validMove = normalizedNeighbors.contains(toRoom.toLowerCase());
+    
+        if (!validMove) {
+            System.out.println("Move failed: " + toRoom + " is not adjacent to " + fromRoom + ".");
+        }
+    
+        return validMove;
     }
+    
     
     public void endTurn() {
         turnTracker.endTurn();
@@ -83,12 +117,13 @@ public class GameBoard {
     public Room getRoomByID(String roomID) {
         return rooms.get(roomID);
     }
+    
     /**
- * Method to distribute role cards to sets at the beginning of a day
- * @param cards List of role cards parsed from XML
- */
+     * Method to distribute role cards to sets at the beginning of a day
+     * @param cards List of role cards parsed from XML
+     */
     private void distributeCards(List<RoleCard> cards) {
-    // Make a copy of the cards we can modify
+        // Make a copy of the cards we can modify
         List<RoleCard> availableCards = new ArrayList<>(cards);
         
         // Shuffle the cards to randomize distribution
@@ -125,5 +160,9 @@ public class GameBoard {
         }
         
         System.out.println("Distributed " + cardIndex + " cards to sets");
+    }
+
+    public List<String> getAllRoomNames() {
+        return new ArrayList<>(rooms.keySet());
     }
 }

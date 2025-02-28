@@ -1,6 +1,7 @@
 //many imports necessary
 import java.util.Random; // For rollDice()
-import java.util.List; // If List is used in future updates
+import java.util.List; 
+import java.util.ArrayList;
 
 //Controller, takes commands from user
 public class Actor {
@@ -22,30 +23,32 @@ public class Actor {
 
     public boolean inputMove(String destinationRoomID, GameBoard gameBoard) {
         if (location.getCurrentRoom() == null) {
-            System.out.println("Error: You are not in a valid room.");
             return false;
         }
     
         List<String> adjacentRoomNames = location.getCurrentRoom().getAdjacentRooms();
+        List<String> normalizedNeighbors = new ArrayList<>();
         
-        if (!adjacentRoomNames.contains(destinationRoomID)) {
-            System.out.println("Invalid move - not an adjacent room.");
+        for (String neighbor : adjacentRoomNames) {
+            normalizedNeighbors.add(neighbor.toLowerCase());
+        }
+    
+        if (!normalizedNeighbors.contains(destinationRoomID.toLowerCase())) {
             return false;
         }
     
-        // Fix: Get the actual Room object
-        Room destinationRoom = gameBoard.getRoomByID(destinationRoomID);
+        Room destinationRoom = gameBoard.getRoomByID(destinationRoomID.toLowerCase());
         if (destinationRoom == null) {
-            System.out.println("Error: Destination room not found.");
             return false;
         }
     
         location.updatePlayerLocation(destinationRoom);
-        System.out.println("Moved to " + destinationRoomID);
+        
+        // ✅ Add a success message back
+        System.out.println("You moved to " + destinationRoomID + ".");
+        
         return true;
     }
-    
-    
     
     
 

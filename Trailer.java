@@ -12,6 +12,7 @@ public class Trailer extends BasicRoom {
     
     public Trailer(List<String> adjacentRooms) {
         super("Trailer", adjacentRooms);
+        
     }
     
     /**
