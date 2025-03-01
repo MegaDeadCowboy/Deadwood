@@ -343,10 +343,6 @@ public class Actor {
             return null;
         }
         
-        // Get all roles that are:
-        // 1. Appropriate for the player's rank
-        // 2. Not already taken by other players
-        // 3. Not already successfully acted
         List<RoleCard.Role> availableRoles = new ArrayList<>();
         
         for (RoleCard.Role role : roleCard.getSceneRoles()) {
@@ -394,8 +390,4 @@ public class Actor {
         return points; 
     }
     
-    public int getRoleRank(String roleName) {
-        // Implement logic to return the role's required rank
-        return 2;
-    }
 }

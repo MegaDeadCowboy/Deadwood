@@ -67,9 +67,6 @@ public class PlayerInterface {
                 boolean success = currentPlayer.inputMove(argument, gameBoard);
                 
                 if (success) {
-                    // displayLocation();
-                    // displayPossibleDestinations();
-                    
                     // Display roles at new location only if player doesn't have a role
                     if (currentPlayer.getCurrentRole() == null) {
                         displayAvailableRoles();
@@ -169,9 +166,7 @@ public class PlayerInterface {
         }
     }
     
-    /**
-     * Display available roles at the player's current location if they don't have a role
-     */
+
     private void displayAvailableRoles() {
         // Only show roles if player doesn't have one
         if (currentPlayer.getCurrentRole() != null) {
@@ -196,9 +191,7 @@ public class PlayerInterface {
         System.out.println("Use 'work <role name>' to take a role.");
     }
     
-    /**
-     * Display information about the current scene if there is one
-     */
+
     private void displaySceneInformation() {
         String sceneInfo = currentPlayer.getCurrentSceneInfo();
         
@@ -211,9 +204,7 @@ public class PlayerInterface {
         System.out.println(sceneInfo);
     }
     
-    /**
-     * Display a list of possible destinations the player can move to
-     */
+ 
     private void displayPossibleDestinations() {
         PlayerLocation location = currentPlayer.getLocation();
         Room currentRoom = location.getCurrentRoom();

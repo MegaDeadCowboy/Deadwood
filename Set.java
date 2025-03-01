@@ -6,21 +6,20 @@ import java.util.Map;
 
 
  // Model class that holds information about a set in a room.
-
 public class Set {
     private RoleCard roleCard;
     private int shotCounter;
     private int extraRoles;
     private boolean isActive;
-    private Map<String, String> takenRoles; // Maps role name to player ID
-    private HashSet<String> actedRoles; // Tracks roles that have been successfully acted
+    private Map<String, String> takenRoles; 
+    private HashSet<String> actedRoles; 
     
  
     public Set(RoleCard roleCard, int shotCounter, int extraRoles) {
         this.roleCard = roleCard;
         this.shotCounter = shotCounter;
         this.extraRoles = extraRoles;
-        this.isActive = true; // Default to active when created
+        this.isActive = true; 
         this.takenRoles = new HashMap<>();
         this.actedRoles = new HashSet<>();
     }
@@ -32,27 +31,13 @@ public class Set {
         if (shotCounter <= 0) {
             return true;
         }
-        
         return false;
     }
-    
- 
-    private void wrapScene() {
-        System.out.println("That's a wrap! Scene " + roleCard.getSceneID() + " completed.");
-        awardSceneBonus();
-        isActive = false;
-    }
-
-    private void awardSceneBonus() {
-        System.out.println("Scene bonus awarded!");
-    }
-    
-
+     
     public void markRoleAsActed(String roleName) {
         actedRoles.add(roleName);
     }
     
-
     public boolean hasRoleBeenActed(String roleName) {
         return actedRoles.contains(roleName);
     }
