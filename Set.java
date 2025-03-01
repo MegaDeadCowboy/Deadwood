@@ -7,7 +7,8 @@ import java.util.Map;
 
  // Model class that holds information about a set in a room.
 public class Set {
-    private RoleCard roleCard;
+    private RoleCard roleCard;            // Main scene card
+    private RoleCard extraRolesCard;      // Extra roles card (for parts in the set)
     private int shotCounter;
     private int extraRoles;
     private boolean isActive;
@@ -44,8 +45,28 @@ public class Set {
     
 
     public boolean isRoleAvailable(String roleName) {
-        // First, check if the role exists
+        // First, check if the role exists (either in the main RoleCard or in extraRolesCard)
         boolean roleExists = false;
+        
+        // Check in main roleCard
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                if (role.getName().equalsIgnoreCase(roleName)) {
+                    roleExists = true;
+                    break;
+                }
+            }
+        }
+        
+        // If not found, check in extraRolesCard
+        if (!roleExists && extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                if (role.getName().equalsIgnoreCase(roleName)) {
+                    roleExists = true;
+                    break;
+                }
+            }
+        }
         
         return roleExists && !takenRoles.containsKey(roleName);
     }
@@ -70,11 +91,78 @@ public class Set {
         takenRoles.remove(roleName);
     }
     
-    
     public List<String> getAvailableRoles() {
         List<String> availableRoles = new ArrayList<>();
         
+        // Get roles from main roleCard
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                if (!takenRoles.containsKey(role.getName())) {
+                    availableRoles.add(role.getName());
+                }
+            }
+        }
+        
+        // Get roles from extraRolesCard
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                if (!takenRoles.containsKey(role.getName())) {
+                    availableRoles.add(role.getName());
+                }
+            }
+        }
+        
         return availableRoles;
+    }
+    
+    // Set the extra roles card
+    public void setExtraRolesCard(RoleCard extraRolesCard) {
+        this.extraRolesCard = extraRolesCard;
+    }
+    
+    // Get the extra roles card
+    public RoleCard getExtraRolesCard() {
+        return extraRolesCard;
+    }
+    
+    // Get all roles (both scene and extra)
+    public List<RoleCard.Role> getAllRoles() {
+        List<RoleCard.Role> allRoles = new ArrayList<>();
+        
+        // Add roles from the main scene card
+        if (roleCard != null) {
+            allRoles.addAll(roleCard.getSceneRoles());
+        }
+        
+        // Add roles from the extra roles card
+        if (extraRolesCard != null) {
+            allRoles.addAll(extraRolesCard.getSceneRoles());
+        }
+        
+        return allRoles;
+    }
+    
+    // Return role information
+    public RoleCard.Role getRole(String roleName) {
+        // Check in main roleCard first
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                if (role.getName().equalsIgnoreCase(roleName)) {
+                    return role;
+                }
+            }
+        }
+        
+        // If not found, check in extraRolesCard
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                if (role.getName().equalsIgnoreCase(roleName)) {
+                    return role;
+                }
+            }
+        }
+        
+        return null;
     }
     
     // Getters
@@ -101,13 +189,35 @@ public class Set {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Set for Scene ").append(roleCard.getSceneID());
-        sb.append(" (").append(shotCounter).append(" shots remaining)\n");
-        sb.append("Scene: ").append(roleCard.getSceneName()).append("\n");
-        sb.append("Budget: $").append(roleCard.getSceneBudget()).append("\n");
         
-        // List roles - this depends on your RoleCard implementation
-        sb.append("Roles:\n");
+        if (roleCard != null) {
+            sb.append("Set for Scene ").append(roleCard.getSceneID());
+            sb.append(" (").append(shotCounter).append(" shots remaining)\n");
+            sb.append("Scene: ").append(roleCard.getSceneName()).append("\n");
+            sb.append("Budget: $").append(roleCard.getSceneBudget()).append("\n");
+        } else {
+            sb.append("Set (").append(shotCounter).append(" shots)\n");
+        }
+        
+        // List roles
+        sb.append("Scene Roles:\n");
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                sb.append("  - ").append(role.getName());
+                sb.append(" (Rank ").append(role.getLevel()).append("): \"");
+                sb.append(role.getLine()).append("\"\n");
+            }
+        }
+        
+        // List extra roles
+        sb.append("Extra Roles:\n");
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                sb.append("  - ").append(role.getName());
+                sb.append(" (Rank ").append(role.getLevel()).append("): \"");
+                sb.append(role.getLine()).append("\"\n");
+            }
+        }
         
         // Taken roles
         if (!takenRoles.isEmpty()) {

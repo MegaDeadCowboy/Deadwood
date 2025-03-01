@@ -110,8 +110,39 @@ public class BoardXMLParser {
             
             // Parse takes for the set
             int takes = parseTakes(setElement);
-            // Parse parts for the set
+            
+            // Parse parts for the set and create a temporary RoleCard
             List<Map<String, Object>> parts = parseParts(setElement);
+            
+            // Create a temporary RoleCard with setName as the scene name
+            RoleCard extraRoleCard = new RoleCard(
+                0,           // No scene ID for extra roles
+                "Extra Roles for " + setName,
+                "Extra roles for the " + setName + " set",
+                "",          // No card image for extra roles
+                0,           // No budget for extra roles
+                takes        // Use takes as shots
+            );
+            
+            // Add each extra role to the card
+            for (Map<String, Object> part : parts) {
+                String roleName = (String) part.get("name");
+                int roleLevel = (int) part.get("level");
+                String roleLine = (String) part.get("line");
+                
+                extraRoleCard.addRole(roleName, roleLevel, roleLine);
+            }
+            
+            // Create an empty Set for this room (it will be filled with a scene card later)
+            Set setObj = new Set(null, takes, parts.size());
+            
+            // Store the extra roles RoleCard in the Set for later access
+            setObj.setExtraRolesCard(extraRoleCard);
+            
+            // Assign the set to the room
+            filmRoom.assignSet(setObj);
+            
+            System.out.println("Created set for " + setName + " with " + parts.size() + " extra roles");
         }
         
         // Parse trailer - explicitly cast to Room
@@ -128,6 +159,10 @@ public class BoardXMLParser {
         if (officeElement != null) {
             List<String> officeNeighbors = parseNeighbors(officeElement);
             CastingOffice castingOffice = new CastingOffice(officeNeighbors);
+            
+            // Parse upgrade prices
+            parseUpgrades(officeElement, castingOffice);
+            
             Room office = castingOffice;
             rooms.put("office", office);
         }

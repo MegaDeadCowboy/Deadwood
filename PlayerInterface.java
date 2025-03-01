@@ -181,19 +181,80 @@ public class PlayerInterface {
             return;
         }
         
+        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
+        
+        // Display scene roles and extra roles separately
         System.out.println("\nAvailable roles at this location:");
-        for (RoleCard.Role role : availableRoles) {
-            System.out.printf("  - %s (Rank %d): \"%s\"%n", 
-                role.getName(), 
-                role.getLevel(),
-                role.getLine());
+        
+        if (currentSet != null) {
+            // Print scene roles first (starring roles)
+            System.out.println("Starring Roles:");
+            boolean hasStarringRoles = false;
+            
+            if (currentSet.getRoleCard() != null) {
+                for (RoleCard.Role role : availableRoles) {
+                    // Check if this is a starring role (from the scene card)
+                    boolean isStarringRole = false;
+                    for (RoleCard.Role sceneRole : currentSet.getRoleCard().getSceneRoles()) {
+                        if (role.getName().equals(sceneRole.getName())) {
+                            isStarringRole = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isStarringRole) {
+                        hasStarringRoles = true;
+                        System.out.printf("  - %s (Rank %d): \"%s\"%n", 
+                            role.getName(), 
+                            role.getLevel(),
+                            role.getLine());
+                    }
+                }
+            }
+            
+            if (!hasStarringRoles) {
+                System.out.println("  (None available for your rank)");
+            }
+            
+            // Print extra roles (from the board XML)
+            System.out.println("Extra Roles:");
+            boolean hasExtraRoles = false;
+            
+            if (currentSet.getExtraRolesCard() != null) {
+                for (RoleCard.Role role : availableRoles) {
+                    // Check if this is an extra role
+                    boolean isExtraRole = false;
+                    for (RoleCard.Role extraRole : currentSet.getExtraRolesCard().getSceneRoles()) {
+                        if (role.getName().equals(extraRole.getName())) {
+                            isExtraRole = true;
+                            break;
+                        }
+                    }
+                    
+                    if (isExtraRole) {
+                        hasExtraRoles = true;
+                        System.out.printf("  - %s (Rank %d): \"%s\"%n", 
+                            role.getName(), 
+                            role.getLevel(),
+                            role.getLine());
+                    }
+                }
+            }
+            
+            if (!hasExtraRoles) {
+                System.out.println("  (None available for your rank)");
+            }
         }
+        
         System.out.println("Use 'work <role name>' to take a role.");
     }
     
 
     private void displaySceneInformation() {
         String sceneInfo = currentPlayer.getCurrentSceneInfo();
+        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
         
         if (sceneInfo == null) {
             System.out.println("No active scene at this location.");
@@ -202,6 +263,18 @@ public class PlayerInterface {
         
         System.out.println("\nCurrent Scene Information:");
         System.out.println(sceneInfo);
+        
+        // Also display extra roles available in this location
+        if (currentSet != null && currentSet.getExtraRolesCard() != null) {
+            System.out.println("\nExtra Roles at this location:");
+            RoleCard extraRolesCard = currentSet.getExtraRolesCard();
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                System.out.printf("  - %s (Rank %d): \"%s\"%n", 
+                    role.getName(), 
+                    role.getLevel(),
+                    role.getLine());
+            }
+        }
     }
     
  
@@ -253,7 +326,7 @@ public class PlayerInterface {
         if (currentSet != null && currentSet.isActive()) {
             System.out.printf("Location: %s shooting Scene %d%n",
                 currentRoom.getRoomID(),
-                currentSet.getRoleCard().getSceneID()
+                currentSet.getRoleCard() != null ? currentSet.getRoleCard().getSceneID() : 0
             );
         } else {
             System.out.println("Location: " + currentRoom.getRoomID());
@@ -281,6 +354,32 @@ public class PlayerInterface {
         
         System.out.println("Current room ID: " + currentRoom.getRoomID());
         System.out.println("Adjacent rooms: " + currentRoom.getAdjacentRooms());
+        
+        // Show set information if it exists
+        Set currentSet = currentRoom.getSet();
+        if (currentSet != null) {
+            System.out.println("\nCurrent Set Information:");
+            System.out.println("  Shot Counter: " + currentSet.getShotCounter());
+            System.out.println("  Is Active: " + currentSet.isActive());
+            
+            // Show scene card info
+            if (currentSet.getRoleCard() != null) {
+                System.out.println("  Scene: " + currentSet.getRoleCard().getSceneName());
+                System.out.println("  Budget: $" + currentSet.getRoleCard().getSceneBudget());
+                System.out.println("  Scene Roles: ");
+                for (RoleCard.Role role : currentSet.getRoleCard().getSceneRoles()) {
+                    System.out.println("    - " + role.getName() + " (Rank " + role.getLevel() + ")");
+                }
+            }
+            
+            // Show extra roles info
+            if (currentSet.getExtraRolesCard() != null) {
+                System.out.println("  Extra Roles: ");
+                for (RoleCard.Role role : currentSet.getExtraRolesCard().getSceneRoles()) {
+                    System.out.println("    - " + role.getName() + " (Rank " + role.getLevel() + ")");
+                }
+            }
+        }
         
         // Check all rooms to make sure they can be retrieved
         System.out.println("\nRoom retrieval test:");

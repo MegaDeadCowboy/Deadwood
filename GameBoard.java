@@ -201,12 +201,26 @@ public class GameBoard {
                 // Get the number of shots from the board XML (or use a default)
                 int shots = 3; // Default value - you might want to read this from XML
                 
-                // Create a set for this room with the card
-                Set set = new Set(card, shots, 0); // Assume no extra roles for now
+                // Check if the room already has a set with extra roles
+                Set existingSet = room.getSet();
+                RoleCard extraRolesCard = null;
+                if (existingSet != null) {
+                    extraRolesCard = existingSet.getExtraRolesCard();
+                    shots = existingSet.getShotCounter(); // Preserve the shot counter
+                }
+                
+                // Create a new set for this room with the card, preserving extra roles
+                Set set = new Set(card, shots, extraRolesCard != null ? extraRolesCard.getSceneRoles().size() : 0);
+                
+                // If we had extra roles, keep them
+                if (extraRolesCard != null) {
+                    set.setExtraRolesCard(extraRolesCard);
+                }
                 
                 // Assign the set to the room
                 room.assignSet(set);
                 
+                System.out.println("Assigned Scene " + card.getSceneID() + " to " + room.getRoomID());
             }
         }
     }

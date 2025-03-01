@@ -39,7 +39,7 @@ public class CardXMLParser {
                 sceneDescription, 
                 cardImg,       
                 budget,        
-                3   
+                3   // Default number of shots
             );
             
             // Parse roles
@@ -57,10 +57,15 @@ public class CardXMLParser {
                 card.addRole(roleName, roleLevel, roleLine);
             }
             
-            cards.add(card);
+            // Debug info - comment out if not needed
+            System.out.println("Parsed card: " + cardName + " (Scene " + sceneNumber + ")");
+            System.out.println("  Budget: $" + budget);
+            System.out.println("  Roles: " + card.getSceneRoles().size());
             
+            cards.add(card);
         }
         
+        System.out.println("Total cards parsed: " + cards.size());
         return cards;
     }
     
