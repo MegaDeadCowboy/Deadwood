@@ -25,8 +25,11 @@ public class Actor {
             return false;
         }
         
+        // Abandon current role if player has one
+        abandonRole();
+        
         Room currentRoom = location.getCurrentRoom();
-
+    
         // Get and normalize adjacent room names
         List<String> adjacentRoomNames = currentRoom.getAdjacentRooms();
         
@@ -77,8 +80,13 @@ public class Actor {
         Room currentRoom = location.getCurrentRoom();
         Set currentSet = currentRoom.getSet();
         
-        if (currentSet == null || !currentSet.isActive()) {
-            System.out.println("No active set in this room.");
+        if (currentSet == null) {
+            System.out.println("No set in this room.");
+            return false;
+        }
+        
+        if (!currentSet.isActive()) {
+            System.out.println("The scene in this room has wrapped. No roles available.");
             return false;
         }
         
@@ -124,7 +132,7 @@ public class Actor {
         // Check rank requirements
         if (role.getLevel() > currentRank) {
             System.out.println("Cannot take this role - your rank (" + currentRank + 
-                            ") is too low for " + role.getName() + " (rank " + role.getLevel() + ").");
+                               ") is too low for " + role.getName() + " (rank " + role.getLevel() + ").");
             return false;
         }
         
@@ -383,6 +391,7 @@ public class Actor {
             currentRank = targetRank;
             
             System.out.println("Successfully upgraded to rank " + targetRank + "!");
+            
             return true;
         }
 
@@ -390,6 +399,42 @@ public class Actor {
             System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
             return false;
         }
+    }
+
+    /**
+     * Abandons the current role if the player has one
+     * @return true if a role was abandoned, false otherwise
+     */
+    public boolean abandonRole() {
+        // Check if player has a role
+        if (currentRole == null) {
+            return false;
+        }
+        
+        // Get current room and set
+        Room currentRoom = location.getCurrentRoom();
+        if (currentRoom == null) {
+            return false;
+        }
+        
+        Set currentSet = currentRoom.getSet();
+        if (currentSet == null) {
+            return false;
+        }
+        
+        // Release the role
+        currentSet.releaseRole(currentRole);
+        System.out.println("Abandoning role: " + currentRole);
+        
+        // Reset player role
+        String abandonedRole = currentRole;
+        currentRole = null;
+        this.isExtraRole = false;
+        
+        // Reset rehearsal tokens
+        points.resetRehearsalBonus();
+        
+        return true;
     }
 
     /**

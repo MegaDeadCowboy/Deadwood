@@ -138,6 +138,8 @@ public class PlayerInterface {
                     }
                     
                     currentPlayer.inputUpgrade(rank, paymentType);
+
+                    gameBoard.endTurn();
                 } catch (NumberFormatException e) {
                     System.out.println("Invalid rank number. Please specify a number.");
                 }
@@ -176,39 +178,46 @@ public class PlayerInterface {
     }
     
 
-    // Updated displayAvailableRoles method
-private void displayAvailableRoles() {
-    // Only show roles if player doesn't have one
-    if (currentPlayer.getCurrentRole() != null) {
-        System.out.println("You're already working as: " + currentPlayer.getCurrentRole());
-        return;
-    }
-    
-    List<RoleCard.Role> availableRoles = currentPlayer.getAvailableRoles();
-    
-    if (availableRoles == null || availableRoles.isEmpty()) {
-        System.out.println("No roles available at this location.");
-        return;
-    }
-    
-    Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-    Set currentSet = currentRoom.getSet();
-    
-    // Get the scene budget for starring roles and the extra role budget
-    int sceneBudget = 0;
-    int extraRoleBudget = 0;
-    
-    if (currentSet != null) {
+    private void displayAvailableRoles() {
+        // Only show roles if player doesn't have one
+        if (currentPlayer.getCurrentRole() != null) {
+            System.out.println("You're already working as: " + currentPlayer.getCurrentRole());
+            return;
+        }
+        
+        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
+        
+        // Check if there's an active set in this room
+        if (currentSet == null) {
+            System.out.println("No active set in this room.");
+            return;
+        }
+        
+        if (!currentSet.isActive()) {
+            System.out.println("The scene in this room has wrapped. No roles available.");
+            return;
+        }
+        
+        List<RoleCard.Role> availableRoles = currentPlayer.getAvailableRoles();
+        
+        if (availableRoles == null || availableRoles.isEmpty()) {
+            System.out.println("No roles available for your rank at this location.");
+            return;
+        }
+        
+        // Get the scene budget for starring roles and the extra role budget
+        int sceneBudget = 0;
+        int extraRoleBudget = 0;
+        
         if (currentSet.getRoleCard() != null) {
             sceneBudget = currentSet.getRoleCard().getSceneBudget();
         }
         extraRoleBudget = currentSet.getExtraRoleBudget();
-    }
-    
-    // Display scene roles and extra roles separately
-    System.out.println("\nAvailable roles at this location:");
-    
-    if (currentSet != null) {
+        
+        // Display scene roles and extra roles separately
+        System.out.println("\nAvailable roles at this location:");
+        
         // Print scene roles first (starring roles)
         System.out.println("Starring Roles (Scene Budget: $" + sceneBudget + "):");
         boolean hasStarringRoles = false;
@@ -266,10 +275,11 @@ private void displayAvailableRoles() {
         if (!hasExtraRoles) {
             System.out.println("  (None available for your rank)");
         }
+        
+        System.out.println("\nNote: Both starring and extra roles use their own budget for success rolls.");
+        System.out.println("      Every role (starring or extra) decrements the shot counter on success.");
+        System.out.println("Use 'work <role name>' to take a role.");
     }
-    
-    System.out.println("Use 'work <role name>' to take a role.");
-}
 
     // Updated displaySceneInformation method
     private void displaySceneInformation() {
