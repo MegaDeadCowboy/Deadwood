@@ -87,9 +87,6 @@ public class BoardXMLParser {
                     System.out.println("Added upgrade to rank " + level + " for $" + amount);
                 }
             }
-            
-            // You'll need to implement a way to set these in your CastingOffice class
-            // This depends on your implementation
         }
     }
     

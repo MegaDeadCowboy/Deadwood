@@ -1,5 +1,5 @@
+
 // Model, tracks player locations
-// Fixing constructor in PlayerLocation.java
 import java.util.List;
 
 public class PlayerLocation {
@@ -10,11 +10,12 @@ public class PlayerLocation {
 
     public PlayerLocation(int ID) {
         this.playerID = ID;
-        this.roomID = -1; // Default to an invalid room until assigned
+        this.roomID = -1;
         this.onRole = false;
         this.currentRoom = null;
     }
     
+    // Methods
     public boolean validatePlayerMove(String destinationRoomID) {
         if (currentRoom == null) {
             System.out.println("Error: Player is not in a valid room.");

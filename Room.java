@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
+// Abstract class for FilmSetRoom, Trailer, and CastingOffice
 public abstract class Room {
     protected String roomID;
     protected List<String> adjacentRooms;
@@ -34,7 +35,8 @@ public abstract class Room {
     
     public void completeScene() {
         if (set != null && set.isActive()) {
-            set = null; // Remove set after scene is completed
+            // Remove set after scene is completed
+            set = null; 
         }
     }
 }

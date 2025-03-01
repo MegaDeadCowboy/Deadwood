@@ -21,9 +21,6 @@ public class TurnTracker {
         System.out.println("Turn tracker initialized. Starting with Player " + players.get(0).getPlayerID());
     }
 
-    /**
-     * End the current player's turn and advance to the next player
-     */
     public void endTurn() {
         // Store current player ID for logging
         int currentID = players.get(currentPlayerIndex).getPlayerID();
@@ -34,26 +31,13 @@ public class TurnTracker {
         // Advance to the next player
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
 
-        // If we've looped back to the first player, we've completed a round but NOT a day
+        // If we've looped back to the first player, we've completed a round
         if (currentPlayerIndex == 0) {
             System.out.println("All players have taken their turn. Starting new round.");
         } 
         
-        // Check if all scenes are wrapped - if so, start a new day
-        if (checkAllScenesWrapped()) {
-            System.out.println("All scenes have been completed! Starting a new day.");
-            initiateNewDay();
-        } else {
-            Actor nextPlayer = players.get(currentPlayerIndex);
-            System.out.println("Turn ended for Player " + currentID + 
-                              ". Starting turn for Player " + nextPlayer.getPlayerID());
-        }
     }
-    
-    /**
-     * Check if all scenes have been wrapped (completed)
-     * @return true if all sets are inactive, false if any active sets remain
-     */
+
     private boolean checkAllScenesWrapped() {
         // Get all rooms that can have sets
         for (String roomID : gameBoard.getAllRoomNames()) {
@@ -75,9 +59,7 @@ public class TurnTracker {
         return true;
     }
 
-    /**
-     * Start a new day in the game
-     */
+
     private void initiateNewDay() {
         // Use the day tracker to handle day transition
         dayTracker.updateDay(players, trailer, gameBoard); 
@@ -97,9 +79,7 @@ public class TurnTracker {
         System.out.println("A new day has begun. Player " + players.get(currentPlayerIndex).getPlayerID() + " starts.");
     }
     
-    /**
-     * Calculate and display final scores for all players
-     */
+
     private void calculateFinalScores() {
         System.out.println("\n=== FINAL SCORES ===");
         
@@ -112,10 +92,7 @@ public class TurnTracker {
         System.exit(0);
     }
 
-    /**
-     * Get the current player whose turn it is
-     * @return The current player Actor
-     */
+
     public Actor getCurrentPlayer() {
         return players.get(currentPlayerIndex);
     }

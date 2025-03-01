@@ -34,12 +34,12 @@ public class CardXMLParser {
             
             // Create a new RoleCard
             RoleCard card = new RoleCard(
-                sceneNumber,   // sceneID
-                cardName,      // sceneName
-                sceneDescription, // sceneDescription
-                cardImg,       // cardImage
-                budget,        // sceneBudget
-                3              // totalShots (default value, might need to be set differently)
+                sceneNumber,  
+                cardName,      
+                sceneDescription, 
+                cardImg,       
+                budget,        
+                3   
             );
             
             // Parse roles

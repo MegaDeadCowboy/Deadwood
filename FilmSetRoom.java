@@ -1,8 +1,6 @@
 import java.util.List;
 
-/**
- * Standard room that can contain a film set
- */
+// Room child that can contain a set
 public class FilmSetRoom extends Room {
     private int scenesCompleted;
     
@@ -17,11 +15,8 @@ public class FilmSetRoom extends Room {
         scenesCompleted++;
         System.out.println("Scene wrapped in " + roomID);
     }
-    
-    /**
-     * Check if enough scenes have been completed to end the day
-     */
+   
     public boolean endDay() {
-        return scenesCompleted >= 3; // Example threshold
+        return scenesCompleted >= 10;
     }
 }

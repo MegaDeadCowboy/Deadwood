@@ -1,6 +1,7 @@
 import java.util.List;
 import java.util.Scanner;
 
+// Main view for the player until we implement the GUI
 public class PlayerInterface {
     private Scanner scanner;
     private Actor currentPlayer;
@@ -91,6 +92,7 @@ public class PlayerInterface {
                 if(roleSuccess) {
                     gameBoard.endTurn();
                 }
+
                 break;
                 
             case "roles":
@@ -103,10 +105,18 @@ public class PlayerInterface {
                 
             case "act":
                 currentPlayer.inputAttemptScene();
+                
+                gameBoard.endTurn();
+
                 break;
                 
             case "rehearse":
-                currentPlayer.inputRehearse();
+                boolean rehearseSucess = currentPlayer.inputRehearse();
+
+                if(rehearseSucess) {
+                    gameBoard.endTurn();
+                }
+
                 break;
                 
             case "upgrade":

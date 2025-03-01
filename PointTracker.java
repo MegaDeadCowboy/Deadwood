@@ -31,7 +31,7 @@ public class PointTracker {
         this.playerCredit = credits;
     }
 
-    //award a successful attempt on a role
+    // Award a successful attempt on a role
     public void awardActingPoints(boolean success, boolean isExtra) {
         if (success) {
             if (isExtra) {
@@ -49,7 +49,7 @@ public class PointTracker {
        
     }
 
-  //add rehearsal bonus
+  // Add rehearsal bonus
     public boolean addRehearsalToken() {
         if (rehearsalBonus >= MAX_REHEARSAL_BONUS) {
             return false;
@@ -62,7 +62,7 @@ public class PointTracker {
         rehearsalBonus = 0;
     }
 
-    //make payment in casting office
+    // Make payment in casting office
    boolean makePayment(int cost, boolean useCredits) {
         if (cost < 0) {
             throw new IllegalArgumentException("Cost cannot be negative");
@@ -82,7 +82,7 @@ public class PointTracker {
         return false;
     }
 
-    //award bonus when a scene is complete
+    // Award bonus when a scene is complete
     public void awardSceneBonus(int budget, boolean isStarringRole, int roleRank, int numStarringRoles) {
         if (isStarringRole) {
             //roll dice equal to budget
@@ -91,7 +91,7 @@ public class PointTracker {
                 diceRolls[i] = (int)(Math.random() * 6) + 1;
             }
             
-            //sort dice rolls in descending order
+            // Sort dice rolls in descending order
             Arrays.sort(diceRolls);
             for (int i = 0; i < diceRolls.length / 2; i++) {
                 int temp = diceRolls[i];
@@ -122,7 +122,7 @@ public class PointTracker {
         }
     }
 
-   //calculate total points for the end of the game
+   // Calculate total points for the end of the game
     public int calcTotalPoints(int rank) {
         return playerCash + playerCredit + (rank * 5);
     }

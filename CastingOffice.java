@@ -1,9 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Location where players can upgrade their rank
- */
+
 public class CastingOffice extends Room {
     private List<String> upgrades;
     private List<Integer> upgradePrice;
@@ -29,14 +27,12 @@ public class CastingOffice extends Room {
         upgradePrice.add(20); // Rank 4 -> Rank 5
     }
     
-    /**
-     * Validate if a player can upgrade their rank
-     */
     public boolean validateUpgrade(int currentRank, int targetRank, String paymentType, PointTracker cost) {
         int rankDiff = targetRank - currentRank;
         
         if (rankDiff <= 0 || rankDiff > upgradePrice.size()) {
-            return false; // Invalid upgrade
+            // Invalid upgrade
+            return false; 
         }
 
         int price = upgradePrice.get(rankDiff - 1);
@@ -46,9 +42,7 @@ public class CastingOffice extends Room {
             : cost.getPlayerCredit() >= price;
     }
 
-    /**
-     * Process the payment for a rank upgrade
-     */
+    
     public void checkOut(int currentRank, PointTracker cost, int targetRank, String paymentType) {
         int rankDiff = targetRank - currentRank;
 

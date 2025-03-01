@@ -1,7 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
 
-// This is the updated Actor class with improved movement logic
 public class Actor {
     private int playerID;
     private int currentRank;
@@ -24,14 +23,10 @@ public class Actor {
             return false;
         }
         
-        // Debug output to help troubleshoot
         Room currentRoom = location.getCurrentRoom();
-        // System.out.println("Debug - Current room: " + currentRoom.getRoomID());
-        // System.out.println("Debug - Attempting to move to: " + destinationRoomID);
-        
+
         // Get and normalize adjacent room names
         List<String> adjacentRoomNames = currentRoom.getAdjacentRooms();
-        // System.out.println("Debug - Adjacent rooms: " + adjacentRoomNames);
         
         List<String> normalizedNeighbors = new ArrayList<>();
         for (String neighbor : adjacentRoomNames) {
@@ -60,15 +55,17 @@ public class Actor {
             }
         }
         
+        // If destination was not inputted
         if (destinationRoom == null) {
             System.out.println("Error: Cannot find room " + destinationRoomID);
             return false;
         }
         
-        // Update player location
+        // Update player location to the new room
         location.updatePlayerLocation(destinationRoom);
         System.out.println("You moved to " + destinationRoom.getRoomID() + ".");
         
+        // Return true move was successful
         return true;
     }
     
@@ -82,7 +79,7 @@ public class Actor {
             return false;
         }
         
-        // Already in a role
+        // If already in a role
         if (currentRole != null) {
             System.out.println("You're already working as " + currentRole + ". Finish or abandon this role first.");
             return false;
@@ -126,7 +123,53 @@ public class Actor {
         System.out.println("Now working as " + role.getName() + " (rank " + role.getLevel() + ")");
         System.out.println("Line: \"" + role.getLine() + "\"");
         
+        // Choosen role was successful return true
         return true;
+    }
+
+    public boolean inputRehearse() {
+        if (currentRole == null) {
+            System.out.println("Not currently in a role.");
+            return false;
+        }
+        
+        // Get current room and set
+        Room currentRoom = location.getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
+        
+        if (currentSet == null || !currentSet.isActive()) {
+            System.out.println("No active set in this room.");
+            return false;
+        }
+        
+        // Check if this role has already been successfully acted
+        if (currentSet.hasRoleBeenActed(currentRole)) {
+            System.out.println("You've already completed acting for this role. No need to rehearse.");
+            return false;
+        }
+        
+        // Check if rehearsal would exceed the maximum bonus
+        RoleCard roleCard = currentSet.getRoleCard();
+        int budget = roleCard.getSceneBudget();
+        int currentBonus = points.getRehearsalBonus();
+        
+        if (currentBonus >= budget - 1) {
+            System.out.println("You already have the maximum rehearsal bonus for this scene (+" + currentBonus + ").");
+            return false;
+        }
+        
+        // Add rehearsal token
+        boolean added = points.addRehearsalToken();
+        
+        if (added) {
+            System.out.println("Rehearsal successful. Current bonus: +" + points.getRehearsalBonus());
+            return true;
+        } 
+        
+        else {
+            System.out.println("You've reached the maximum rehearsal bonus.");
+            return false;
+        }
     }
 
     public boolean inputAttemptScene() {
@@ -144,6 +187,12 @@ public class Actor {
             return false;
         }
         
+        // Check if this role has already been successfully acted
+        if (currentSet.hasRoleBeenActed(currentRole)) {
+            System.out.println("This role has already been shot successfully. Choose another role on this scene.");
+            return false;
+        }
+        
         // Get dice roll and compare against budget
         int diceRoll = rollDice();
         int rehearsalBonus = points.getRehearsalBonus();
@@ -156,117 +205,96 @@ public class Actor {
                            (rehearsalBonus > 0 ? " + " + rehearsalBonus + " (rehearsal bonus)" : "") + 
                            " = " + totalRoll + " vs Budget: " + budget);
         
+        // If acting success
         if (totalRoll >= budget) {
-            // Acting success
             System.out.println("Acting success!");
+            
+            // Mark this role as successfully acted
+            currentSet.markRoleAsActed(currentRole);
             
             // Award points
             boolean isExtra = true; // Determine if this is an extra role or starring role
             points.awardActingPoints(true, isExtra);
+
+            // Reset player role
+            currentRole = null;
             
             // Decrement shot counter
-            Boolean sceneWrapped = currentSet.decrementShots();
+            boolean sceneWrapped = currentSet.decrementShots();
             
             // If the scene is now wrapped, complete it
             if (sceneWrapped) {
                 System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
                 
-                // Award scene bonus
-                // TODO: Award scene bonus to all players in roles
+                //points.awardSceneBonus(budget, !isExtra, currentSet.getRoleRank(), numStarringRoles);
                 
-                // Complete the scene in the room
                 currentRoom.completeScene();
-                
-                // Reset player role
-                currentRole = null;
             }
             
             return true;
         }
+
         else {
             // Acting failed
             System.out.println("Acting failed.");
-            points.awardActingPoints(false, true); // Extra roles still get a dollar on failure
+            points.awardActingPoints(false, true);
             return false;
         }
     }
 
-    public boolean inputRehearse() {
-        if (currentRole == null) {
-            System.out.println("Not currently in a role.");
-            return false;
-        }
-        
-        points.addRehearsalToken();
-        System.out.println("Rehearsal successful. Current bonus: " + points.getRehearsalBonus());
-        return true;
-    }
-    
     public boolean inputUpgrade(int targetRank, String paymentType) {
         Room currentRoom = location.getCurrentRoom();
-
+    
+        // Not in casting office
         if (!(currentRoom instanceof CastingOffice)) {
             System.out.println("Must be in Casting Office to upgrade.");
             return false;
         }
         
+        // Check if player is in a role
+        if (currentRole != null) {
+            System.out.println("You cannot upgrade while working on a role. Finish or leave your role first.");
+            return false;
+        }
+        
+        // Validate rank upgrade (can't downgrade or stay at same rank)
+        if (targetRank <= currentRank) {
+            System.out.println("Cannot upgrade to rank " + targetRank + ". Must be higher than your current rank (" + currentRank + ").");
+            return false;
+        }
+        
+        // Check if rank is valid
+        if (targetRank < 1 || targetRank > 6) {
+            System.out.println("Invalid rank. Valid ranks are 1 to 6.");
+            return false;
+        }
+        
+        // Normalize payment type
+        paymentType = paymentType.toLowerCase();
+        if (!paymentType.equals("cash") && !paymentType.equals("credit")) {
+            System.out.println("Invalid payment type. Use 'cash' or 'credit'.");
+            return false;
+        }
+        
         CastingOffice office = (CastingOffice) currentRoom;
         
+        // Check if player can afford the upgrade
         if (office.validateUpgrade(currentRank, targetRank, paymentType, points)) {
-            currentRank = targetRank;
+
+            // Process the payment and upgrade
             office.checkOut(currentRank, points, targetRank, paymentType);
-            System.out.println("Successfully upgraded to rank " + targetRank);
+            
+            // Update player rank
+            currentRank = targetRank;
+            
+            System.out.println("Successfully upgraded to rank " + targetRank + "!");
             return true;
         }
+
         else {
             System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
             return false;
         }
-    }
-
-        /**
-     * Get all available roles at the player's current location
-     * @return List of RoleCard.Role objects that are available, or null if no set is present
-     */
-    public List<RoleCard.Role> getAvailableRoles() {
-        // Check if player is at a valid location
-        Room currentRoom = location.getCurrentRoom();
-        if (currentRoom == null) {
-            return null;
-        }
-        
-        // Check if there's an active set
-        Set currentSet = currentRoom.getSet();
-        if (currentSet == null || !currentSet.isActive()) {
-            return null;
-        }
-        
-        // Get roles from the RoleCard
-        RoleCard roleCard = currentSet.getRoleCard();
-        if (roleCard == null) {
-            return null;
-        }
-        
-        // Get all roles that are appropriate for the player's rank and not already taken
-        List<RoleCard.Role> availableRoles = new ArrayList<>();
-        
-        for (RoleCard.Role role : roleCard.getSceneRoles()) {
-            // Check if role is appropriate for player rank and not taken
-            if (role.getLevel() <= this.currentRank && !currentSet.isRoleTaken(role.getName())) {
-                availableRoles.add(role);
-            }
-        }
-        
-        // Also check for extra roles if any
-        // (This would depend on your implementation of extra roles)
-        
-        // Debug output
-        System.out.println("Found " + availableRoles.size() + " available roles for player rank " + currentRank);
-        for (RoleCard.Role role : availableRoles) {
-            System.out.println("Available: " + role.getName() + " (Rank " + role.getLevel() + ")");
-        }
-        
-        return availableRoles;
     }
 
     /**
@@ -294,6 +322,50 @@ public class Actor {
             roleCard.getSceneName(),
             roleCard.getSceneBudget(),
             roleCard.getSceneDescription());
+    }
+   
+    public List<RoleCard.Role> getAvailableRoles() {
+        // Check if player is at a valid location
+        Room currentRoom = location.getCurrentRoom();
+        if (currentRoom == null) {
+            return null;
+        }
+        
+        // Check if there's an active set
+        Set currentSet = currentRoom.getSet();
+        if (currentSet == null || !currentSet.isActive()) {
+            return null;
+        }
+        
+        // Get roles from the RoleCard
+        RoleCard roleCard = currentSet.getRoleCard();
+        if (roleCard == null) {
+            return null;
+        }
+        
+        // Get all roles that are:
+        // 1. Appropriate for the player's rank
+        // 2. Not already taken by other players
+        // 3. Not already successfully acted
+        List<RoleCard.Role> availableRoles = new ArrayList<>();
+        
+        for (RoleCard.Role role : roleCard.getSceneRoles()) {
+            // Check if role is appropriate for player rank, not taken, and not already acted
+            if (role.getLevel() <= this.currentRank && 
+                !currentSet.isRoleTaken(role.getName()) &&
+                !currentSet.hasRoleBeenActed(role.getName())) {
+                
+                availableRoles.add(role);
+            }
+        }
+        
+        // Debug output
+        System.out.println("Found " + availableRoles.size() + " available roles for player rank " + currentRank);
+        for (RoleCard.Role role : availableRoles) {
+            System.out.println("Available: " + role.getName() + " (Rank " + role.getLevel() + ")");
+        }
+        
+        return availableRoles;
     }
     
     // Helper method for dice rolling
@@ -324,6 +396,6 @@ public class Actor {
     
     public int getRoleRank(String roleName) {
         // Implement logic to return the role's required rank
-        return 2; // Example: Hardcode for now or implement proper logic
+        return 2;
     }
 }

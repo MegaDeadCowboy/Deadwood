@@ -1,12 +1,8 @@
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * RoleCard class represents a scene card with roles that can be taken by players.
- * This class stores information parsed from the cards.xml file.
- */
+// Object holding role information
 public class RoleCard {
-    // Scene card information
     private int sceneID;
     private String sceneName;
     private String sceneDescription;
@@ -17,9 +13,6 @@ public class RoleCard {
     // List of roles available on this card
     private List<Role> sceneRoles;
     
-    /**
-     * Inner class to represent a role on the card
-     */
     public static class Role {
         private String name;
         private int level;
@@ -31,7 +24,7 @@ public class RoleCard {
             this.line = line;
         }
         
-        // Getters
+        // Role getters
         public String getName() {
             return name;
         }
@@ -50,16 +43,10 @@ public class RoleCard {
         }
     }
     
-    /**
-     * Default constructor
-     */
     public RoleCard() {
         this.sceneRoles = new ArrayList<>();
     }
     
-    /**
-     * Full constructor
-     */
     public RoleCard(int sceneID, String sceneName, String sceneDescription, 
                     String cardImage, int sceneBudget, int totalShots) {
         this.sceneID = sceneID;
@@ -71,16 +58,12 @@ public class RoleCard {
         this.sceneRoles = new ArrayList<>();
     }
     
-    /**
-     * Add a role to this card
-     */
+    
     public void addRole(String name, int level, String line) {
         sceneRoles.add(new Role(name, level, line));
     }
     
-    /**
-     * Validate if a player can take a specific role on this card
-     */
+    
     public boolean validateRole(String roleName, int currentRank, int roleRank) {
         // First check if the role exists on this card
         boolean roleExists = false;
@@ -95,13 +78,15 @@ public class RoleCard {
             return false;
         }
         
-        // Then check if player rank is sufficient
-        return currentRank >= roleRank;
+        // Check if player rank is sufficient
+        if (currentRank >= roleRank){
+            return true;
+        }
+        else {
+            return false;
+        }
     }
-    
-    /**
-     * Get the role information by name
-     */
+
     public Role getRole(String roleName) {
         for (Role role : sceneRoles) {
             if (role.getName().equalsIgnoreCase(roleName)) {
@@ -111,15 +96,13 @@ public class RoleCard {
         return null;
     }
     
-    /**
-     * Get the rank required for a specific role
-     */
+    
     public int getRoleRank(String roleName) {
         Role role = getRole(roleName);
         return (role != null) ? role.getLevel() : -1;
     }
     
-    // Getters and setters
+    // Role Card getters and setters
     public int getSceneID() {
         return sceneID;
     }

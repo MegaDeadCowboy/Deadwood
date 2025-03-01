@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import org.w3c.dom.Document;
 
+// Initializes the game
 public class GameBoard {
     private Map<String, Room> rooms;
     private List<Actor> players;
@@ -47,9 +48,7 @@ public class GameBoard {
         resetPlayerLocations();
     }
     
-    /**
-     * Load cards from XML and distribute them to the sets
-     */
+    
     private void loadCardsAndDistribute() {
         try {
             // Parse cards XML
@@ -139,14 +138,9 @@ public class GameBoard {
         return validMove;
     }
     
-    /**
-     * End the current player's turn and move to the next player
-     * @return The ID of the new current player
-     */
+    
     public int endTurn() {
         System.out.println("Ending turn for Player " + getCurrentPlayer().getPlayerID());
-        
-        // Reset any per-turn state if needed
         
         // Use turnTracker to advance to the next player
         turnTracker.endTurn();
@@ -159,13 +153,12 @@ public class GameBoard {
         return newPlayerID;
     }
     
-    /**
-     * Reload cards from XML and redistribute them to sets for a new day
-     */
+    
     public void reloadAndDistributeCards() {
         // First, clear all existing sets from rooms
         for (Room room : rooms.values()) {
-            room.completeScene(); // Remove any existing set
+            // Remove any existing set
+            room.completeScene(); 
         }
         
         // Then load and distribute new cards
@@ -176,10 +169,7 @@ public class GameBoard {
         return rooms.get(roomID);
     }
     
-    /**
-     * Method to distribute role cards to sets at the beginning of a day
-     * @param cards List of role cards parsed from XML
-     */
+    
     private void distributeCards(List<RoleCard> cards) {
         if (cards == null || cards.isEmpty()) {
             System.out.println("ERROR: No cards available to distribute!");
@@ -225,10 +215,7 @@ public class GameBoard {
         return new ArrayList<>(rooms.keySet());
     }
     
-    /**
-     * Get all players in the game
-     * @return List of all player actors
-     */
+    
     public List<Actor> getAllPlayers() {
         return players;
     }
