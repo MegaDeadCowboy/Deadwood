@@ -259,8 +259,6 @@ private void displayAvailableRoles() {
         }
     }
     
-    System.out.println("\nNote: Both starring and extra roles use their own budget for success rolls.");
-    System.out.println("      Every role (starring or extra) decrements the shot counter on success.");
     System.out.println("Use 'work <role name>' to take a role.");
 }
 
