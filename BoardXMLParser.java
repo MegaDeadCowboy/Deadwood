@@ -64,29 +64,39 @@ public class BoardXMLParser {
         
         if (upgradesElement != null) {
             NodeList upgradeNodes = upgradesElement.getElementsByTagName("upgrade");
-            List<String> upgrades = new ArrayList<>();
-            List<Integer> upgradePrices = new ArrayList<>();
             
+            // Create lists to store the cash and credit prices
+            List<Integer> cashPrices = new ArrayList<>();
+            List<Integer> creditPrices = new ArrayList<>();
+            
+            // Initialize with dummy values to handle array indexing later
+            for (int i = 0; i < 5; i++) {  // 5 upgrade levels (rank 1->2, 2->3, 3->4, 4->5, 5->6)
+                cashPrices.add(0);
+                creditPrices.add(0);
+            }
+            
+            // Parse all upgrade elements
             for (int i = 0; i < upgradeNodes.getLength(); i++) {
                 Element upgradeElement = (Element) upgradeNodes.item(i);
                 int level = Integer.parseInt(upgradeElement.getAttribute("level"));
                 String currency = upgradeElement.getAttribute("currency");
                 int amount = Integer.parseInt(upgradeElement.getAttribute("amt"));
                 
-                // For now, just handle dollar upgrades (you might need to handle credits too)
-                if (currency.equals("dollar")) {
-                    // Make sure we have entries for levels 1 to (level-1)
-                    while (upgrades.size() < level - 1) {
-                        upgrades.add("dummy");
-                        upgradePrices.add(0);
+                // Level is the target rank (2-6), we need index 0-4
+                int index = level - 2;
+                
+                if (index >= 0 && index < 5) {  // Make sure it's in valid range
+                    if (currency.equals("dollar")) {
+                        cashPrices.set(index, amount);
+                    } else if (currency.equals("credit")) {
+                        creditPrices.set(index, amount);
                     }
-                    
-                    upgrades.add("Rank " + level);
-                    upgradePrices.add(amount);
-                    
-                    // System.out.println("Added upgrade to rank " + level + " for $" + amount);
                 }
             }
+            
+            // Set the parsed prices in the CastingOffice object
+            office.setUpgradePricesCash(cashPrices);
+            office.setUpgradePricesCredit(creditPrices);
         }
     }
     

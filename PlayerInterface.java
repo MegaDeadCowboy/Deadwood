@@ -152,6 +152,15 @@ public class PlayerInterface {
                 System.out.println("Game ended.");
                 System.exit(0);
                 break;
+
+            case "costs":
+                Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+                if (currentRoom instanceof CastingOffice) {
+                    ((CastingOffice) currentRoom).displayUpgradeCosts();
+                } else {
+                    System.out.println("You must be in the Casting Office to view upgrade costs.");
+                }
+                break;
                 
             case "help":
                 displayHelp();
@@ -486,5 +495,6 @@ private void displayAvailableRoles() {
         System.out.println("  quit       - Exit the game");
         System.out.println("  help       - Display this help information");
         System.out.println("  debug      - Show debug room information");
+        System.out.println("  prices      - Show available rank upgrade costs (in Casting Office)");
     }
 }
