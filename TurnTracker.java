@@ -34,15 +34,45 @@ public class TurnTracker {
         // Advance to the next player
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
 
-        // If we've looped back to the first player, it's a new day
+        // If we've looped back to the first player, we've completed a round but NOT a day
         if (currentPlayerIndex == 0) {
-            System.out.println("All players have taken their turn. Starting a new day.");
+            System.out.println("All players have taken their turn. Starting new round.");
+        } 
+        
+        // Check if all scenes are wrapped - if so, start a new day
+        if (checkAllScenesWrapped()) {
+            System.out.println("All scenes have been completed! Starting a new day.");
             initiateNewDay();
         } else {
             Actor nextPlayer = players.get(currentPlayerIndex);
             System.out.println("Turn ended for Player " + currentID + 
                               ". Starting turn for Player " + nextPlayer.getPlayerID());
         }
+    }
+    
+    /**
+     * Check if all scenes have been wrapped (completed)
+     * @return true if all sets are inactive, false if any active sets remain
+     */
+    private boolean checkAllScenesWrapped() {
+        // Get all rooms that can have sets
+        for (String roomID : gameBoard.getAllRoomNames()) {
+            Room room = gameBoard.getRoomByID(roomID);
+            
+            // Skip rooms that can't have sets (like Trailer, Office)
+            if (room instanceof Trailer || room instanceof CastingOffice) {
+                continue;
+            }
+            
+            // Check if this room has an active set
+            Set set = room.getSet();
+            if (set != null && set.isActive()) {
+                return false; // Found at least one active set
+            }
+        }
+        
+        // If we get here, all sets are wrapped
+        return true;
     }
 
     /**

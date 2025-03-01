@@ -11,6 +11,7 @@ public class GameBoard {
     private int playerCount;
     private TurnTracker turnTracker;
     private DayTracker dayTracker;
+    private List<RoleCard> cards;
     
     public GameBoard(int numPlayers) {
         if (numPlayers < 2 || numPlayers > 8) {
@@ -19,6 +20,7 @@ public class GameBoard {
         this.playerCount = numPlayers;
         this.players = new ArrayList<>();
         this.rooms = new HashMap<>();
+        this.cards = new ArrayList<>();
         initiateBoardState();
     }
     
@@ -31,6 +33,9 @@ public class GameBoard {
     
         // Initialize rooms
         createRooms();
+        
+        // Parse cards and distribute them to sets
+        loadCardsAndDistribute();
     
         // Create dayTracker first
         this.dayTracker = new DayTracker(4);
@@ -42,17 +47,39 @@ public class GameBoard {
         resetPlayerLocations();
     }
     
+    /**
+     * Load cards from XML and distribute them to the sets
+     */
+    private void loadCardsAndDistribute() {
+        try {
+            // Parse cards XML
+            ParseXML parser = new ParseXML();
+            Document cardDoc = parser.getDocFromFile("cards.xml");
+            
+            // Use CardXMLParser to extract card information
+            CardXMLParser cardParser = new CardXMLParser(cardDoc);
+            this.cards = cardParser.parseCards();
+            
+            // Distribute cards to sets
+            distributeCards(cards);
+            
+        } catch (Exception e) {
+            System.out.println("ERROR: Failed to load cards - " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
     private void createRooms() {
-        BoardXMLParser boardParser = null;  // Declare boardParser outside try block
+        BoardXMLParser boardParser = null;
     
         try {
             ParseXML parser = new ParseXML();
             Document doc = parser.getDocFromFile("board.xml");
-            boardParser = new BoardXMLParser(doc);  // Assign inside try block
+            boardParser = new BoardXMLParser(doc);
         } catch (Exception e) {
             System.out.println("ERROR: Failed to parse board.xml - " + e.getMessage());
             e.printStackTrace();
-            return;  // Exit early if parsing fails
+            return;
         }
     
         Map<String, Room> parsedRooms = boardParser.parseRooms();
@@ -61,6 +88,7 @@ public class GameBoard {
         for (Map.Entry<String, Room> entry : parsedRooms.entrySet()) {
             rooms.put(entry.getKey(), entry.getValue());
         }
+        
     }
 
     public void resetPlayerLocations() {
@@ -131,6 +159,19 @@ public class GameBoard {
         return newPlayerID;
     }
     
+    /**
+     * Reload cards from XML and redistribute them to sets for a new day
+     */
+    public void reloadAndDistributeCards() {
+        // First, clear all existing sets from rooms
+        for (Room room : rooms.values()) {
+            room.completeScene(); // Remove any existing set
+        }
+        
+        // Then load and distribute new cards
+        loadCardsAndDistribute();
+    }
+    
     public Room getRoomByID(String roomID) {
         return rooms.get(roomID);
     }
@@ -140,6 +181,11 @@ public class GameBoard {
      * @param cards List of role cards parsed from XML
      */
     private void distributeCards(List<RoleCard> cards) {
+        if (cards == null || cards.isEmpty()) {
+            System.out.println("ERROR: No cards available to distribute!");
+            return;
+        }
+        
         // Make a copy of the cards we can modify
         List<RoleCard> availableCards = new ArrayList<>(cards);
         
@@ -171,12 +217,8 @@ public class GameBoard {
                 // Assign the set to the room
                 room.assignSet(set);
                 
-                System.out.println("Assigned scene '" + card.getSceneName() + 
-                        "' to room '" + room.getRoomID() + "'");
             }
         }
-        
-        System.out.println("Distributed " + cardIndex + " cards to sets");
     }
 
     public List<String> getAllRoomNames() {

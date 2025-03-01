@@ -18,7 +18,6 @@ public class CardXMLParser {
         
         // Get all cards
         NodeList cardNodes = root.getElementsByTagName("card");
-        System.out.println("Found " + cardNodes.getLength() + " scene cards.");
         
         for (int i = 0; i < cardNodes.getLength(); i++) {
             Element cardElement = (Element) cardNodes.item(i);
@@ -60,8 +59,6 @@ public class CardXMLParser {
             
             cards.add(card);
             
-            System.out.println("Parsed card: " + cardName + " (Scene " + sceneNumber + 
-                    ") with budget " + budget + " and " + card.getSceneRoles().size() + " roles.");
         }
         
         return cards;

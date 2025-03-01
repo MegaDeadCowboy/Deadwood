@@ -21,10 +21,15 @@ public class PlayerInterface {
             return;
         }
         
-        // Display player status and available destinations at the start of their turn
+        // Display player status and available information at the start of their turn - ONCE
         displayPlayerInfo();
         displayLocation();
         displayPossibleDestinations();
+        
+        // Display available roles only if the player doesn't have a role and is at a set
+        if (currentPlayer.getCurrentRole() == null) {
+            displayAvailableRoles();
+        }
     
         System.out.print("> ");
         String input = scanner.nextLine().trim();
@@ -61,22 +66,39 @@ public class PlayerInterface {
                 boolean success = currentPlayer.inputMove(argument, gameBoard);
                 
                 if (success) {
-                    displayLocation();
-                    displayPossibleDestinations();
+                    // displayLocation();
+                    // displayPossibleDestinations();
+                    
+                    // Display roles at new location only if player doesn't have a role
+                    if (currentPlayer.getCurrentRole() == null) {
+                        displayAvailableRoles();
+                    }
                     
                     // Ask the player if they want to end their turn after moving
-                    System.out.print("Move completed. Turn Ended.");
+                    System.out.print("Move completed. ");
                     gameBoard.endTurn();
-                    
                 }
                 break;
                 
             case "work":
                 if (argument.isEmpty()) {
                     System.out.println("Please specify a role.");
+                    displayAvailableRoles();
                     return;
                 }
-                currentPlayer.inputRole(argument);
+                boolean roleSuccess = currentPlayer.inputRole(argument);
+
+                if(roleSuccess) {
+                    gameBoard.endTurn();
+                }
+                break;
+                
+            case "roles":
+                displayAvailableRoles();
+                break;
+                
+            case "scene":
+                displaySceneInformation();
                 break;
                 
             case "act":
@@ -135,6 +157,48 @@ public class PlayerInterface {
             default:
                 System.out.println("Invalid command. Type 'help' for available commands.");
         }
+    }
+    
+    /**
+     * Display available roles at the player's current location if they don't have a role
+     */
+    private void displayAvailableRoles() {
+        // Only show roles if player doesn't have one
+        if (currentPlayer.getCurrentRole() != null) {
+            System.out.println("You're already working as: " + currentPlayer.getCurrentRole());
+            return;
+        }
+        
+        List<RoleCard.Role> availableRoles = currentPlayer.getAvailableRoles();
+        
+        if (availableRoles == null || availableRoles.isEmpty()) {
+            System.out.println("No roles available at this location.");
+            return;
+        }
+        
+        System.out.println("\nAvailable roles at this location:");
+        for (RoleCard.Role role : availableRoles) {
+            System.out.printf("  - %s (Rank %d): \"%s\"%n", 
+                role.getName(), 
+                role.getLevel(),
+                role.getLine());
+        }
+        System.out.println("Use 'work <role name>' to take a role.");
+    }
+    
+    /**
+     * Display information about the current scene if there is one
+     */
+    private void displaySceneInformation() {
+        String sceneInfo = currentPlayer.getCurrentSceneInfo();
+        
+        if (sceneInfo == null) {
+            System.out.println("No active scene at this location.");
+            return;
+        }
+        
+        System.out.println("\nCurrent Scene Information:");
+        System.out.println(sceneInfo);
     }
     
     /**
@@ -235,6 +299,8 @@ public class PlayerInterface {
         System.out.println("  who        - Display your player information");
         System.out.println("  where      - Show your current location");
         System.out.println("  move [room]- Move to an adjacent room");
+        System.out.println("  roles      - Show available roles at your location");
+        System.out.println("  scene      - Show information about the current scene");
         System.out.println("  work [role]- Take a role in the current set");
         System.out.println("  act        - Attempt to act in your current role");
         System.out.println("  rehearse   - Rehearse for your current role");

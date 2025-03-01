@@ -73,7 +73,7 @@ public class Actor {
     }
     
     public boolean inputRole(String roleName) {
-        // Get current room's set information and validate role
+        // Get current room's set information
         Room currentRoom = location.getCurrentRoom();
         Set currentSet = currentRoom.getSet();
         
@@ -82,18 +82,51 @@ public class Actor {
             return false;
         }
         
-        // Validate role rank against player rank
-        RoleCard roleCard = currentSet.getRoleCard();
-
-        if (roleCard.validateRole(roleName, currentRank, getRoleRank(roleName))) {
-            currentRole = roleName;
-            System.out.println("Now working as " + roleName);
-            return true;
-        }
-        else {
-            System.out.println("Cannot take this role - rank too low or role unavailable.");
+        // Already in a role
+        if (currentRole != null) {
+            System.out.println("You're already working as " + currentRole + ". Finish or abandon this role first.");
             return false;
         }
+        
+        // Get the role card and find the requested role
+        RoleCard roleCard = currentSet.getRoleCard();
+        RoleCard.Role role = null;
+        
+        // Search for the role (case insensitive)
+        for (RoleCard.Role r : roleCard.getSceneRoles()) {
+            if (r.getName().equalsIgnoreCase(roleName)) {
+                role = r;
+                break;
+            }
+        }
+        
+        // Role not found
+        if (role == null) {
+            System.out.println("Role '" + roleName + "' not found in this scene.");
+            return false;
+        }
+        
+        // Check rank requirements
+        if (role.getLevel() > currentRank) {
+            System.out.println("Cannot take this role - your rank (" + currentRank + 
+                               ") is too low for " + role.getName() + " (rank " + role.getLevel() + ").");
+            return false;
+        }
+        
+        // Check if role is already taken
+        if (currentSet.isRoleTaken(role.getName())) {
+            System.out.println("This role is already taken by another player.");
+            return false;
+        }
+        
+        // Take the role
+        currentRole = role.getName();
+        currentSet.assignRole(role.getName(), String.valueOf(playerID));
+        
+        System.out.println("Now working as " + role.getName() + " (rank " + role.getLevel() + ")");
+        System.out.println("Line: \"" + role.getLine() + "\"");
+        
+        return true;
     }
 
     public boolean inputAttemptScene() {
@@ -102,24 +135,58 @@ public class Actor {
             return false;
         }
         
+        // Get current room and set
+        Room currentRoom = location.getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
+        
+        if (currentSet == null || !currentSet.isActive()) {
+            System.out.println("No active set in this room.");
+            return false;
+        }
+        
         // Get dice roll and compare against budget
         int diceRoll = rollDice();
         int rehearsalBonus = points.getRehearsalBonus();
         int totalRoll = diceRoll + rehearsalBonus;
         
-        Room currentRoom = location.getCurrentRoom();
-        Set currentSet = currentRoom.getSet();
-        int budget = currentSet.getRoleCard().getSceneBudget();
+        RoleCard roleCard = currentSet.getRoleCard();
+        int budget = roleCard.getSceneBudget();
+        
+        System.out.println("Acting attempt - You rolled: " + diceRoll + 
+                           (rehearsalBonus > 0 ? " + " + rehearsalBonus + " (rehearsal bonus)" : "") + 
+                           " = " + totalRoll + " vs Budget: " + budget);
         
         if (totalRoll >= budget) {
-            points.awardActingPoints(true, currentRole.equals("extra"));
-            System.out.println("Acting success! Roll: " + totalRoll + " vs Budget: " + budget);
-            currentSet.decrementShots();
+            // Acting success
+            System.out.println("Acting success!");
+            
+            // Award points
+            boolean isExtra = true; // Determine if this is an extra role or starring role
+            points.awardActingPoints(true, isExtra);
+            
+            // Decrement shot counter
+            Boolean sceneWrapped = currentSet.decrementShots();
+            
+            // If the scene is now wrapped, complete it
+            if (sceneWrapped) {
+                System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
+                
+                // Award scene bonus
+                // TODO: Award scene bonus to all players in roles
+                
+                // Complete the scene in the room
+                currentRoom.completeScene();
+                
+                // Reset player role
+                currentRole = null;
+            }
+            
             return true;
         }
         else {
-            points.awardActingPoints(false, currentRole.equals("extra"));
-            System.out.println("Acting failed. Roll: " + totalRoll + " vs Budget: " + budget);
+            // Acting failed
+            System.out.println("Acting failed.");
+            points.awardActingPoints(false, true); // Extra roles still get a dollar on failure
             return false;
         }
     }
@@ -155,6 +222,78 @@ public class Actor {
             System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
             return false;
         }
+    }
+
+        /**
+     * Get all available roles at the player's current location
+     * @return List of RoleCard.Role objects that are available, or null if no set is present
+     */
+    public List<RoleCard.Role> getAvailableRoles() {
+        // Check if player is at a valid location
+        Room currentRoom = location.getCurrentRoom();
+        if (currentRoom == null) {
+            return null;
+        }
+        
+        // Check if there's an active set
+        Set currentSet = currentRoom.getSet();
+        if (currentSet == null || !currentSet.isActive()) {
+            return null;
+        }
+        
+        // Get roles from the RoleCard
+        RoleCard roleCard = currentSet.getRoleCard();
+        if (roleCard == null) {
+            return null;
+        }
+        
+        // Get all roles that are appropriate for the player's rank and not already taken
+        List<RoleCard.Role> availableRoles = new ArrayList<>();
+        
+        for (RoleCard.Role role : roleCard.getSceneRoles()) {
+            // Check if role is appropriate for player rank and not taken
+            if (role.getLevel() <= this.currentRank && !currentSet.isRoleTaken(role.getName())) {
+                availableRoles.add(role);
+            }
+        }
+        
+        // Also check for extra roles if any
+        // (This would depend on your implementation of extra roles)
+        
+        // Debug output
+        System.out.println("Found " + availableRoles.size() + " available roles for player rank " + currentRank);
+        for (RoleCard.Role role : availableRoles) {
+            System.out.println("Available: " + role.getName() + " (Rank " + role.getLevel() + ")");
+        }
+        
+        return availableRoles;
+    }
+
+    /**
+     * Get the scene information at the player's current location
+     * @return String with scene details, or null if no scene
+     */
+    public String getCurrentSceneInfo() {
+        Room currentRoom = location.getCurrentRoom();
+        if (currentRoom == null) {
+            return null;
+        }
+        
+        Set currentSet = currentRoom.getSet();
+        if (currentSet == null || !currentSet.isActive()) {
+            return null;
+        }
+        
+        RoleCard roleCard = currentSet.getRoleCard();
+        if (roleCard == null) {
+            return null;
+        }
+        
+        return String.format("Scene %d: \"%s\" (Budget: $%d)\nDescription: %s",
+            roleCard.getSceneID(),
+            roleCard.getSceneName(),
+            roleCard.getSceneBudget(),
+            roleCard.getSceneDescription());
     }
     
     // Helper method for dice rolling

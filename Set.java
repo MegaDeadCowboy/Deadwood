@@ -31,13 +31,20 @@ public class Set {
     /**
      * Decrements the shot counter. If it reaches zero, the scene is wrapped.
      */
-    public void decrementShots() {
+    /**
+     * Decrements the shot counter. If it reaches zero, the scene is wrapped.
+     * @return true if the scene is now wrapped (shots = 0), false otherwise
+     */
+    public boolean decrementShots() {
         --shotCounter;
         System.out.println("Shot completed! " + shotCounter + " shots remaining.");
         
-        if (shotCounter == 0) {
+        if (shotCounter <= 0) {
             wrapScene();
+            return true;
         }
+        
+        return false;
     }
     
     /**
@@ -46,7 +53,7 @@ public class Set {
     private void wrapScene() {
         System.out.println("That's a wrap! Scene " + roleCard.getSceneID() + " completed.");
         awardSceneBonus();
-        isActive = false; // Scene completed
+        isActive = false; // Mark scene as completed
     }
     
     /**
@@ -110,6 +117,20 @@ public class Set {
         
         return availableRoles;
     }
+
+    // Add this method to the Set class
+
+    /**
+     * Check if a role is already taken by a player
+     * @param roleName The name of the role to check
+     * @return true if the role is taken, false otherwise
+     */
+    public boolean isRoleTaken(String roleName) {
+        // Check if the role exists in the takenRoles map
+        return takenRoles.containsKey(roleName);
+    }
+
+    
     
     // Getters
     public RoleCard getRoleCard() {
