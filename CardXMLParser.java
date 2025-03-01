@@ -58,14 +58,14 @@ public class CardXMLParser {
             }
             
             // Debug info - comment out if not needed
-            System.out.println("Parsed card: " + cardName + " (Scene " + sceneNumber + ")");
-            System.out.println("  Budget: $" + budget);
-            System.out.println("  Roles: " + card.getSceneRoles().size());
+            // System.out.println("Parsed card: " + cardName + " (Scene " + sceneNumber + ")");
+            // System.out.println("  Budget: $" + budget);
+            // System.out.println("  Roles: " + card.getSceneRoles().size());
             
             cards.add(card);
         }
         
-        System.out.println("Total cards parsed: " + cards.size());
+        // System.out.println("Total cards parsed: " + cards.size());
         return cards;
     }
     

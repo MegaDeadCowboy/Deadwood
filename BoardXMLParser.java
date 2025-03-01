@@ -84,7 +84,7 @@ public class BoardXMLParser {
                     upgrades.add("Rank " + level);
                     upgradePrices.add(amount);
                     
-                    System.out.println("Added upgrade to rank " + level + " for $" + amount);
+                    // System.out.println("Added upgrade to rank " + level + " for $" + amount);
                 }
             }
         }
@@ -142,7 +142,7 @@ public class BoardXMLParser {
             // Assign the set to the room
             filmRoom.assignSet(setObj);
             
-            System.out.println("Created set for " + setName + " with " + parts.size() + " extra roles");
+            // System.out.println("Created set for " + setName + " with " + parts.size() + " extra roles");
         }
         
         // Parse trailer - explicitly cast to Room

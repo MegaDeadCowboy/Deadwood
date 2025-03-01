@@ -14,8 +14,8 @@ public class Set {
     private boolean isActive;
     private Map<String, String> takenRoles; 
     private HashSet<String> actedRoles; 
+    private int extraRoleBudget;          // Budget for extra roles
     
- 
     public Set(RoleCard roleCard, int shotCounter, int extraRoles) {
         this.roleCard = roleCard;
         this.shotCounter = shotCounter;
@@ -23,6 +23,7 @@ public class Set {
         this.isActive = true; 
         this.takenRoles = new HashMap<>();
         this.actedRoles = new HashSet<>();
+        this.extraRoleBudget = 1;         // Default budget for extra roles
     }
 
     public boolean decrementShots() {
@@ -91,6 +92,7 @@ public class Set {
         takenRoles.remove(roleName);
     }
     
+    
     public List<String> getAvailableRoles() {
         List<String> availableRoles = new ArrayList<>();
         
@@ -118,6 +120,21 @@ public class Set {
     // Set the extra roles card
     public void setExtraRolesCard(RoleCard extraRolesCard) {
         this.extraRolesCard = extraRolesCard;
+        
+        // Set the extra role budget based on the level of the roles
+        if (extraRolesCard != null && !extraRolesCard.getSceneRoles().isEmpty()) {
+            // Calculate average rank of extra roles, use that as budget
+            int totalRank = 0;
+            int count = 0;
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                totalRank += role.getLevel();
+                count++;
+            }
+            
+            if (count > 0) {
+                this.extraRoleBudget = Math.max(1, totalRank / count); // At least 1
+            }
+        }
     }
     
     // Get the extra roles card
@@ -165,6 +182,30 @@ public class Set {
         return null;
     }
     
+    // Check if a role is an extra role
+    public boolean isExtraRole(String roleName) {
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                if (role.getName().equalsIgnoreCase(roleName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
+    // Get the budget for extra roles
+    public int getExtraRoleBudget() {
+        return extraRoleBudget;
+    }
+    
+    // Set the budget for extra roles
+    public void setExtraRoleBudget(int budget) {
+        if (budget > 0) {
+            this.extraRoleBudget = budget;
+        }
+    }
+    
     // Getters
     public RoleCard getRoleCard() {
         return roleCard;
@@ -210,7 +251,7 @@ public class Set {
         }
         
         // List extra roles
-        sb.append("Extra Roles:\n");
+        sb.append("Extra Roles (Budget: ").append(extraRoleBudget).append("):\n");
         if (extraRolesCard != null) {
             for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
                 sb.append("  - ").append(role.getName());

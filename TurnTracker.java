@@ -17,8 +17,6 @@ public class TurnTracker {
         this.trailer = trailer;
         this.gameBoard = gameBoard; 
         this.currentPlayerIndex = 0;
-        
-        System.out.println("Turn tracker initialized. Starting with Player " + players.get(0).getPlayerID());
     }
 
     public void endTurn() {

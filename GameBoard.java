@@ -220,7 +220,7 @@ public class GameBoard {
                 // Assign the set to the room
                 room.assignSet(set);
                 
-                System.out.println("Assigned Scene " + card.getSceneID() + " to " + room.getRoomID());
+                // System.out.println("Assigned Scene " + card.getSceneID() + " to " + room.getRoomID());
             }
         }
     }
