@@ -126,12 +126,12 @@ public class BoardXMLParser {
             
             // Create a temporary RoleCard with setName as the scene name
             RoleCard extraRoleCard = new RoleCard(
-                0,           // No scene ID for extra roles
+                0,          
                 "Extra Roles for " + setName,
                 "Extra roles for the " + setName + " set",
-                "",          // No card image for extra roles
-                0,           // No budget for extra roles
-                takes        // Use takes as shots
+                "",          
+                0,          
+                takes        
             );
             
             // Add each extra role to the card
@@ -143,7 +143,7 @@ public class BoardXMLParser {
                 extraRoleCard.addRole(roleName, roleLevel, roleLine);
             }
             
-            // Create an empty Set for this room (it will be filled with a scene card later)
+            // Create an empty Set for this room
             Set setObj = new Set(null, takes, parts.size());
             
             // Store the extra roles RoleCard in the Set for later access
@@ -151,8 +151,6 @@ public class BoardXMLParser {
             
             // Assign the set to the room
             filmRoom.assignSet(setObj);
-            
-            // System.out.println("Created set for " + setName + " with " + parts.size() + " extra roles");
         }
         
         // Parse trailer - explicitly cast to Room

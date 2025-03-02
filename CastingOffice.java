@@ -3,8 +3,8 @@ import java.util.List;
 
 
 public class CastingOffice extends Room {
-    private List<Integer> upgradePriceCash;   // Cash prices for each rank upgrade
-    private List<Integer> upgradePriceCredit; // Credit prices for each rank upgrade
+    private List<Integer> upgradePriceCash;   
+    private List<Integer> upgradePriceCredit; 
     
     public CastingOffice() {
         super("Casting Office", new ArrayList<>());
@@ -127,7 +127,7 @@ public class CastingOffice extends Room {
         System.out.println("-------------------------------------");
         
         for (int i = 0; i < upgradePriceCash.size(); i++) {
-            int targetRank = i + 2;  // Ranks start at 2 (upgrading from rank 1)
+            int targetRank = i + 2; 
             System.out.printf("%4d | $%9d | %11d credits%n", 
                 targetRank, 
                 upgradePriceCash.get(i), 

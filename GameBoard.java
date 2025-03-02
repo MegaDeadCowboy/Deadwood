@@ -24,8 +24,6 @@ public class GameBoard {
         this.cards = new ArrayList<>();
         initiateBoardState();
     }
-    
-   // Update the initiateBoardState method in GameBoard.java
 
     public void initiateBoardState() {
         // Create players with appropriate starting conditions based on player count
@@ -64,9 +62,9 @@ public class GameBoard {
         loadCardsAndDistribute();
 
         // Create dayTracker with days based on player count
-        int maxDays = 4; // Default for 4+ players
+        int maxDays = 4; 
         if (playerCount <= 3) {
-            maxDays = 3; // Only 3 days for 2-3 players
+            maxDays = 3; 
         }
         this.dayTracker = new DayTracker(maxDays);
         
@@ -168,7 +166,7 @@ public class GameBoard {
             return false;
         }
     
-        // Convert all neighbor names to lowercase for case-insensitive comparison
+        // Convert all neighbor names to lowercase 
         List<String> normalizedNeighbors = new ArrayList<>();
         for (String neighbor : current.getAdjacentRooms()) {
             normalizedNeighbors.add(neighbor.toLowerCase());
@@ -243,15 +241,15 @@ public class GameBoard {
                 // Get the next card
                 RoleCard card = availableCards.get(cardIndex++);
                 
-                // Get the number of shots from the board XML (or use a default)
-                int shots = 3; // Default value - you might want to read this from XML
+                // Set shots to default
+                int shots = 3; 
                 
                 // Check if the room already has a set with extra roles
                 Set existingSet = room.getSet();
                 RoleCard extraRolesCard = null;
                 if (existingSet != null) {
                     extraRolesCard = existingSet.getExtraRolesCard();
-                    shots = existingSet.getShotCounter(); // Preserve the shot counter
+                    shots = existingSet.getShotCounter();
                 }
                 
                 // Create a new set for this room with the card, preserving extra roles
@@ -264,20 +262,10 @@ public class GameBoard {
                 
                 // Assign the set to the room
                 room.assignSet(set);
-                
-                // System.out.println("Assigned Scene " + card.getSceneID() + " to " + room.getRoomID());
             }
         }
     }
     
-       
-        /**
-     * Awards scene bonuses to all players with roles in the specified room
-     * @param room The room where the scene wrapped
-     * @param set The set that was completed
-     * @param currentPlayer The player who completed the scene
-     * @param completedRole The role that the current player just completed
-     */
     public void awardSceneBonusesToPlayers(Room room, Set set, Actor currentPlayer, String completedRole) {
         int budget = 0;
         if (set.getRoleCard() != null) {

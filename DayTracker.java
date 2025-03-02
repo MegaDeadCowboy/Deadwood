@@ -35,7 +35,7 @@ public class DayTracker {
         for (Actor player : players) {
             if (player.getCurrentRole() != null) {
                 System.out.println("Player " + player.getPlayerID() + " reset from role: " + player.getCurrentRole());
-                // Use reflection to set currentRole to null - this is a workaround for a private field
+               
                 try {
                     java.lang.reflect.Field field = Actor.class.getDeclaredField("currentRole");
                     field.setAccessible(true);

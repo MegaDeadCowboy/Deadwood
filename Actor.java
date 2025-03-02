@@ -47,6 +47,7 @@ public class Actor {
         
         // Find the destination room (case insensitive)
         Room destinationRoom = null;
+
         // First try exact match
         destinationRoom = gameBoard.getRoomByID(destinationRoomID.toLowerCase());
         
@@ -102,7 +103,7 @@ public class Actor {
         RoleCard.Role role = null;
         boolean isExtraRole = false;
         
-        // First search in the main scene roles (case insensitive)
+        // First search in the main scene roles
         if (roleCard != null) {
             for (RoleCard.Role r : roleCard.getSceneRoles()) {
                 if (r.getName().equalsIgnoreCase(roleName)) {
@@ -144,7 +145,7 @@ public class Actor {
         
         // Take the role
         currentRole = role.getName();
-        this.isExtraRole = isExtraRole; // Set the flag to track if this is an extra role
+        this.isExtraRole = isExtraRole;
         currentSet.assignRole(role.getName(), String.valueOf(playerID));
         
         System.out.println("Now working as " + role.getName() + " (rank " + role.getLevel() + ")");
@@ -213,11 +214,7 @@ public class Actor {
                 System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
                 
                 // Award bonuses to all players in the scene
-                // We pass the current player and their role separately
                 gameBoard.awardSceneBonusesToPlayers(currentRoom, currentSet, this, currentRole);
-                
-                // Now that bonuses have been awarded, we can complete the scene
-                // This will mark the set as inactive, preventing further actions
                 currentRoom.completeScene();
                 
                 // Reset the player's role now that the scene is complete
@@ -235,6 +232,7 @@ public class Actor {
             return false;
         }
     }
+
     public List<RoleCard.Role> getAvailableRoles() {
         // Check if player is at a valid location
         Room currentRoom = location.getCurrentRoom();
@@ -277,13 +275,6 @@ public class Actor {
                 }
             }
         }
-        
-        // Debug output
-        // System.out.println("Found " + availableRoles.size() + " available roles for player rank " + currentRank);
-        // for (RoleCard.Role role : availableRoles) {
-        //     System.out.println("Available: " + role.getName() + " (Rank " + role.getLevel() + ")");
-        // }
-        
         return availableRoles;
     }
 
@@ -390,10 +381,6 @@ public class Actor {
         }
     }
 
-    /**
-     * Abandons the current role if the player has one
-     * @return true if a role was abandoned, false otherwise
-     */
     public boolean abandonRole() {
         // Check if player has a role
         if (currentRole == null) {
@@ -426,10 +413,6 @@ public class Actor {
         return true;
     }
 
-    /**
-     * Get the scene information at the player's current location
-     * @return String with scene details, or null if no scene
-     */
     public String getCurrentSceneInfo() {
         Room currentRoom = location.getCurrentRoom();
         if (currentRoom == null) {

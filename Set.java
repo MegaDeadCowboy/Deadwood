@@ -7,14 +7,14 @@ import java.util.Map;
 
  // Model class that holds information about a set in a room.
 public class Set {
-    private RoleCard roleCard;            // Main scene card
-    private RoleCard extraRolesCard;      // Extra roles card (for parts in the set)
+    private RoleCard roleCard;            
+    private RoleCard extraRolesCard;      
     private int shotCounter;
     private int extraRoles;
     private boolean isActive;
     private Map<String, String> takenRoles; 
     private HashSet<String> actedRoles; 
-    private int extraRoleBudget;          // Budget for extra roles
+    private int extraRoleBudget;         
     
     public Set(RoleCard roleCard, int shotCounter, int extraRoles) {
         this.roleCard = roleCard;
@@ -23,7 +23,7 @@ public class Set {
         this.isActive = true; 
         this.takenRoles = new HashMap<>();
         this.actedRoles = new HashSet<>();
-        this.extraRoleBudget = 1;         // Default budget for extra roles
+        this.extraRoleBudget = 1;        
     }
 
     public boolean decrementShots() {
@@ -158,7 +158,24 @@ public class Set {
         
         return allRoles;
     }
-    
+    public void markAllRolesAsActed() {
+        // Mark all starring roles as acted
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark all extra roles as acted
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark the set as inactive
+        this.isActive = false;
+    }
     // Return role information
     public RoleCard.Role getRole(String roleName) {
         // Check in main roleCard first
@@ -270,27 +287,5 @@ public class Set {
         }
         
         return sb.toString();
-    }
-        /**
-     * Mark all roles in this set as acted
-     * This prevents players from taking new roles after a scene has wrapped
-     */
-    public void markAllRolesAsActed() {
-        // Mark all starring roles as acted
-        if (roleCard != null) {
-            for (RoleCard.Role role : roleCard.getSceneRoles()) {
-                actedRoles.add(role.getName());
-            }
-        }
-        
-        // Mark all extra roles as acted
-        if (extraRolesCard != null) {
-            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
-                actedRoles.add(role.getName());
-            }
-        }
-        
-        // Mark the set as inactive
-        this.isActive = false;
     }
 }
