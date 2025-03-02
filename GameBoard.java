@@ -224,7 +224,78 @@ public class GameBoard {
             }
         }
     }
-
+    
+       
+        /**
+     * Awards scene bonuses to all players with roles in the specified room
+     * @param room The room where the scene wrapped
+     * @param set The set that was completed
+     * @param currentPlayer The player who completed the scene
+     * @param completedRole The role that the current player just completed
+     */
+    public void awardSceneBonusesToPlayers(Room room, Set set, Actor currentPlayer, String completedRole) {
+        int budget = 0;
+        if (set.getRoleCard() != null) {
+            budget = set.getRoleCard().getSceneBudget();
+        }
+        
+        int numStarringRoles = 0;
+        if (set.getRoleCard() != null) {
+            numStarringRoles = set.getRoleCard().getSceneRoles().size();
+        }
+        
+        System.out.println("Scene wrapped! Awarding bonuses to players on the set...");
+        boolean bonusAwarded = false;
+        
+        // First, award bonus to the current player who completed the scene
+        if (currentPlayer.getLocation().getCurrentRoom() == room && completedRole != null) {
+            boolean isExtraRole = set.isExtraRole(completedRole);
+            int roleRank = 0;
+            
+            RoleCard.Role roleObj = set.getRole(completedRole);
+            if (roleObj != null) {
+                roleRank = roleObj.getLevel();
+            }
+            
+            currentPlayer.getPoints().awardSceneBonus(budget, isExtraRole, roleRank, numStarringRoles);
+            System.out.println("Player " + currentPlayer.getPlayerID() + " got a scene bonus for role: " + completedRole);
+            bonusAwarded = true;
+        }
+        
+        // Then check for other players with roles in the same room
+        for (Actor player : players) {
+            // Skip the current player who already got their bonus
+            if (player == currentPlayer) {
+                continue;
+            }
+            
+            if (player.getLocation().getCurrentRoom() == room) {
+                String role = player.getCurrentRole();
+                
+                // Only award bonuses to players with roles
+                if (role != null) {
+                    boolean isExtraRole = set.isExtraRole(role);
+                    int roleRank = 0;
+                    
+                    RoleCard.Role roleObj = set.getRole(role);
+                    if (roleObj != null) {
+                        roleRank = roleObj.getLevel();
+                    }
+                    
+                    player.getPoints().awardSceneBonus(budget, isExtraRole, roleRank, numStarringRoles);
+                    System.out.println("Player " + player.getPlayerID() + " got a scene bonus for role: " + role);
+                    bonusAwarded = true;
+                }
+            }
+        }
+        
+        // Mark all roles as acted so players can't take them anymore
+        set.markAllRolesAsActed();
+        
+        if (!bonusAwarded) {
+            System.out.println("No players received a scene bonus.");
+        }
+}
     public List<String> getAllRoomNames() {
         return new ArrayList<>(rooms.keySet());
     }

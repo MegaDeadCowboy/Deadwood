@@ -83,8 +83,8 @@ public class PointTracker {
     }
 
     // Award bonus when a scene is complete
-    public void awardSceneBonus(int budget, boolean isStarringRole, int roleRank, int numStarringRoles) {
-        if (isStarringRole) {
+    public void awardSceneBonus(int budget, boolean isExtraRole, int roleRank, int numStarringRoles) {
+        if (!isExtraRole) {
             //roll dice equal to budget
             int[] diceRolls = new int[budget];
             for (int i = 0; i < budget; i++) {

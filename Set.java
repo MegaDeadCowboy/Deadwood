@@ -271,4 +271,26 @@ public class Set {
         
         return sb.toString();
     }
+        /**
+     * Mark all roles in this set as acted
+     * This prevents players from taking new roles after a scene has wrapped
+     */
+    public void markAllRolesAsActed() {
+        // Mark all starring roles as acted
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark all extra roles as acted
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark the set as inactive
+        this.isActive = false;
+    }
 }

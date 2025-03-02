@@ -154,7 +154,7 @@ public class Actor {
         return true;
     }
 
-    public boolean inputAttemptScene() {
+    public boolean inputAttemptScene(GameBoard gameBoard) {
         if (currentRole == null) {
             System.out.println("Not currently in a role.");
             return false;
@@ -192,8 +192,8 @@ public class Actor {
         }
         
         System.out.println("Acting attempt - You rolled: " + diceRoll + 
-                        (rehearsalBonus > 0 ? " + " + rehearsalBonus + " (rehearsal bonus)" : "") + 
-                        " = " + totalRoll + " vs Budget: " + budget);
+                           (rehearsalBonus > 0 ? " + " + rehearsalBonus + " (rehearsal bonus)" : "") + 
+                           " = " + totalRoll + " vs Budget: " + budget);
         
         // If acting success
         if (totalRoll >= budget) {
@@ -204,36 +204,26 @@ public class Actor {
             
             // Award points based on role type
             points.awardActingPoints(true, isExtraRole);
-
-            // Reset player role
-            currentRole = null;
-
-            // Reset rehearsal bonus
-            rehearsalBonus = 0;
+    
+            // For extra roles or starring roles, decrement the shot counter
+            boolean sceneWrapped = currentSet.decrementShots();
             
-            // For extra roles, we need to decrement the shot counter
-            if (isExtraRole) {
-                // Decrement shot counter for extra roles too
-                boolean sceneWrapped = currentSet.decrementShots();
+            // If the scene is now wrapped, complete it
+            if (sceneWrapped) {
+                System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
                 
-                // If the scene is now wrapped, complete it
-                if (sceneWrapped) {
-                    System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
-                    currentRoom.completeScene();
-                }
-            } else {
-                // For starring roles, decrement shot counter
-                boolean sceneWrapped = currentSet.decrementShots();
+                // Award bonuses to all players in the scene
+                // We pass the current player and their role separately
+                gameBoard.awardSceneBonusesToPlayers(currentRoom, currentSet, this, currentRole);
                 
-                // If the scene is now wrapped, complete it
-                if (sceneWrapped) {
-                    System.out.println("Scene wrapped in " + currentRoom.getRoomID() + "!");
-                    
-                    // Implement proper scene bonus assignment here
-                    //points.awardSceneBonus(budget, !isExtra, currentSet.getRoleRank(), numStarringRoles);
-                    
-                    currentRoom.completeScene();
-                }
+                // Now that bonuses have been awarded, we can complete the scene
+                // This will mark the set as inactive, preventing further actions
+                currentRoom.completeScene();
+                
+                // Reset the player's role now that the scene is complete
+                currentRole = null;
+                isExtraRole = false;
+                points.resetRehearsalBonus();
             }
             
             return true;
@@ -245,7 +235,6 @@ public class Actor {
             return false;
         }
     }
-
     public List<RoleCard.Role> getAvailableRoles() {
         // Check if player is at a valid location
         Room currentRoom = location.getCurrentRoom();

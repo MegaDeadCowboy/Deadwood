@@ -20,19 +20,19 @@ public class CastingOffice extends Room {
         this.upgradePriceCash = new ArrayList<>();
         this.upgradePriceCredit = new ArrayList<>();
         
-        // Set default upgrade prices for cash
-        upgradePriceCash.add(4);  // Rank 1 -> Rank 2 (costs $4)
-        upgradePriceCash.add(10); // Rank 2 -> Rank 3 (costs $10)
-        upgradePriceCash.add(18); // Rank 3 -> Rank 4 (costs $18)
-        upgradePriceCash.add(28); // Rank 4 -> Rank 5 (costs $28)
-        upgradePriceCash.add(40); // Rank 5 -> Rank 6 (costs $40)
+        // Set default upgrade prices for cash - index is target rank - 2
+        upgradePriceCash.add(4);  // Rank 2 costs $4
+        upgradePriceCash.add(10); // Rank 3 costs $10
+        upgradePriceCash.add(18); // Rank 4 costs $18
+        upgradePriceCash.add(28); // Rank 5 costs $28
+        upgradePriceCash.add(40); // Rank 6 costs $40
         
-        // Set default upgrade prices for credit
-        upgradePriceCredit.add(5);  // Rank 1 -> Rank 2 (costs 5 credits)
-        upgradePriceCredit.add(10); // Rank 2 -> Rank 3 (costs 10 credits)
-        upgradePriceCredit.add(15); // Rank 3 -> Rank 4 (costs 15 credits)
-        upgradePriceCredit.add(20); // Rank 4 -> Rank 5 (costs 20 credits)
-        upgradePriceCredit.add(25); // Rank 5 -> Rank 6 (costs 25 credits)
+        // Set default upgrade prices for credit - index is target rank - 2
+        upgradePriceCredit.add(5);  // Rank 2 costs 5 credits
+        upgradePriceCredit.add(10); // Rank 3 costs 10 credits
+        upgradePriceCredit.add(15); // Rank 4 costs 15 credits
+        upgradePriceCredit.add(20); // Rank 5 costs 20 credits
+        upgradePriceCredit.add(25); // Rank 6 costs 25 credits
     }
     
     // Method to set the cash upgrade prices
@@ -50,16 +50,19 @@ public class CastingOffice extends Room {
     }
     
     public boolean validateUpgrade(int currentRank, int targetRank, String paymentType, PointTracker cost) {
-        int rankDiff = targetRank - currentRank;
-        
-        if (rankDiff <= 0 || rankDiff > 5) {
-            // Invalid upgrade (no upgrades beyond rank 6)
+        // Can't downgrade or stay at same rank
+        if (targetRank <= currentRank) {
             return false; 
         }
 
-        int index = currentRank - 1;  // Array is zero-based, ranks are 1-based
-        if (index < 0 || index >= 5) {
-            // Invalid current rank
+        // Can't upgrade beyond rank 6
+        if (targetRank > 6) {
+            return false;
+        }
+        
+        // Calculate price - index is target rank - 2
+        int index = targetRank - 2;  
+        if (index < 0 || index >= upgradePriceCash.size()) {
             return false;
         }
         
@@ -75,28 +78,42 @@ public class CastingOffice extends Room {
 
     
     public void checkOut(int currentRank, PointTracker cost, int targetRank, String paymentType) {
-        int rankDiff = targetRank - currentRank;
-
-        if (rankDiff <= 0 || rankDiff > 5) {
-            System.out.println("Invalid upgrade selection.");
+        // Can't downgrade or stay at same rank
+        if (targetRank <= currentRank) {
+            System.out.println("Invalid upgrade selection. New rank must be higher than current rank.");
             return;
         }
 
-        int index = currentRank - 1;  // Array is zero-based, ranks are 1-based
-        if (index < 0 || index >= 5) {
-            System.out.println("Invalid current rank.");
+        // Can't upgrade beyond rank 6
+        if (targetRank > 6) {
+            System.out.println("Invalid upgrade selection. Maximum rank is 6.");
+            return;
+        }
+        
+        // Calculate price - index is target rank - 2
+        int index = targetRank - 2;
+        if (index < 0 || index >= upgradePriceCash.size()) {
+            System.out.println("Invalid target rank.");
             return;
         }
         
         int price;
         if (paymentType.equals("cash")) {
             price = upgradePriceCash.get(index);
-            cost.makePayment(price, false);
-            System.out.println("Paid $" + price + " to upgrade from rank " + currentRank + " to rank " + targetRank);
+            if (cost.makePayment(price, false)) {
+                System.out.println("Paid $" + price + " to upgrade to rank " + targetRank);
+            } else {
+                System.out.println("Not enough cash for this upgrade.");
+                return;
+            }
         } else {
             price = upgradePriceCredit.get(index);
-            cost.makePayment(price, true);
-            System.out.println("Paid " + price + " credits to upgrade from rank " + currentRank + " to rank " + targetRank);
+            if (cost.makePayment(price, true)) {
+                System.out.println("Paid " + price + " credits to upgrade to rank " + targetRank);
+            } else {
+                System.out.println("Not enough credits for this upgrade.");
+                return;
+            }
         }
 
         System.out.println("Upgrade successful! Now Rank: " + targetRank);
