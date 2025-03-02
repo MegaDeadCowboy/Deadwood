@@ -187,7 +187,15 @@ public class PlayerInterface {
         // If player has a role, show it but still display other roles
         String currentRole = currentPlayer.getCurrentRole();
         if (currentRole != null) {
-            System.out.println("Your current role: " + currentRole);
+            Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+            Set currentSet = currentRoom.getSet();
+            
+            if (currentSet != null && currentSet.hasRoleBeenActed(currentRole)) {
+                System.out.println("Your current role: " + currentRole + " [COMPLETED]");
+            } else {
+                System.out.println("Your current role: " + currentRole);
+            }
+            
             System.out.println("Other available roles at this location (you must abandon your current role to take these):");
         } else {
             System.out.println("Available roles at this location:");
@@ -230,11 +238,17 @@ public class PlayerInterface {
                 
                 hasStarringRoles = true;
                 String status = "";
-                if (currentRole != null && role.getName().equals(currentRole)) {
-                    status = " [YOUR CURRENT ROLE]";
-                } else if (currentSet.hasRoleBeenActed(role.getName())) {
+                
+                // If the role has been acted
+                if (currentSet.hasRoleBeenActed(role.getName())) {
                     status = " [COMPLETED]";
-                } else if (currentSet.isRoleTaken(role.getName())) {
+                } 
+                // If it's not completed but it's the player's current role
+                else if (currentRole != null && role.getName().equals(currentRole)) {
+                    status = " [YOUR CURRENT ROLE]";
+                } 
+                // If it's taken by someone else
+                else if (currentSet.isRoleTaken(role.getName())) {
                     status = " [TAKEN]";
                 }
                 
@@ -263,11 +277,17 @@ public class PlayerInterface {
                 
                 hasExtraRoles = true;
                 String status = "";
-                if (currentRole != null && role.getName().equals(currentRole)) {
-                    status = " [YOUR CURRENT ROLE]";
-                } else if (currentSet.hasRoleBeenActed(role.getName())) {
+                
+                // If the role has been acted
+                if (currentSet.hasRoleBeenActed(role.getName())) {
                     status = " [COMPLETED]";
-                } else if (currentSet.isRoleTaken(role.getName())) {
+                } 
+                // If it's not completed but it's the player's current role
+                else if (currentRole != null && role.getName().equals(currentRole)) {
+                    status = " [YOUR CURRENT ROLE]";
+                } 
+                // If it's taken by someone else
+                else if (currentSet.isRoleTaken(role.getName())) {
                     status = " [TAKEN]";
                 }
                 
@@ -283,13 +303,15 @@ public class PlayerInterface {
             System.out.println("  (None available for your rank)");
         }
         
-        System.out.println("\nNote: Both starring and extra roles use their own budget for success rolls.");
-        System.out.println("      Every role (starring or extra) decrements the shot counter on success.");
-        
         if (currentRole == null) {
             System.out.println("Use 'work <role name>' to take a role.");
         } else {
-            System.out.println("Use 'abandon' to leave your current role, or 'work <role name>' to switch roles.");
+            boolean isRoleCompleted = currentSet != null && currentSet.hasRoleBeenActed(currentRole);
+            if (isRoleCompleted) {
+                System.out.println("Your current role is completed. Use 'abandon' to leave it, or 'work <role name>' to switch to a new role.");
+            } else {
+                System.out.println("Use 'abandon' to leave your current role, or 'work <role name>' to switch roles.");
+            }
         }
     }
 

@@ -25,29 +25,74 @@ public class GameBoard {
         initiateBoardState();
     }
     
+   // Update the initiateBoardState method in GameBoard.java
+
     public void initiateBoardState() {
-        // Create players with appropriate starting conditions
+        // Create players with appropriate starting conditions based on player count
         for (int i = 1; i <= playerCount; i++) {
-            Actor player = new Actor(i, 1);
+            // Default starting values
+            int startingRank = 1;
+            int startingCredits = 0;
+            
+            // Set player stats based on number of players
+            if (playerCount == 5) {
+                // 5 players: start with 2 credits each
+                startingCredits = 2;
+            } else if (playerCount == 6) {
+                // 6 players: start with 4 credits each
+                startingCredits = 4;
+            } else if (playerCount >= 7) {
+                // 7-8 players: start at rank 2
+                startingRank = 2;
+            }
+            
+            // Create player with appropriate starting values
+            Actor player = new Actor(i, startingRank);
+            
+            // Set starting credits if needed
+            if (startingCredits > 0) {
+                player.getPoints().setStartingPoints(startingCredits, startingRank);
+            }
+            
             players.add(player);
         }
-    
+
         // Initialize rooms
         createRooms();
         
         // Parse cards and distribute them to sets
         loadCardsAndDistribute();
-    
-        // Create dayTracker first
-        this.dayTracker = new DayTracker(4);
+
+        // Create dayTracker with days based on player count
+        int maxDays = 4; // Default for 4+ players
+        if (playerCount <= 3) {
+            maxDays = 3; // Only 3 days for 2-3 players
+        }
+        this.dayTracker = new DayTracker(maxDays);
         
         // Create turnTracker after players and dayTracker are initialized
         this.turnTracker = new TurnTracker(players, dayTracker, (Trailer) rooms.get("trailer"), this);
 
         // Set initial player locations
         resetPlayerLocations();
+        
+        // Display game setup information
+        System.out.println("\n==================================");
+        System.out.println("       GAME CONFIGURATION        ");
+        System.out.println("==================================");
+        System.out.println("Number of players: " + playerCount);
+        System.out.println("Number of days: " + maxDays);
+        
+        if (playerCount == 5) {
+            System.out.println("Starting bonus: 2 credits per player");
+        } else if (playerCount == 6) {
+            System.out.println("Starting bonus: 4 credits per player");
+        } else if (playerCount >= 7) {
+            System.out.println("Starting bonus: All players begin at Rank 2");
+        }
+        System.out.println("==================================\n");
     }
-    
+        
     
     private void loadCardsAndDistribute() {
         try {
