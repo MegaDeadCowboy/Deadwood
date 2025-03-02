@@ -15,7 +15,7 @@ public class Trailer extends Room {
     
    // Used to reset players at the end of a day
     public void resetPlayerLocations(List<Actor> players, GameBoard gameBoard) {
-        Room trailerRoom = gameBoard.getRoomByID("Trailer");
+        Room trailerRoom = gameBoard.getRoomByID("trailer");
     
         // Did we lose the trailer?
         if (trailerRoom == null) {
