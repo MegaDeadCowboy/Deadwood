@@ -70,6 +70,10 @@ public class Actor {
         // Update player location to the new room
         location.updatePlayerLocation(destinationRoom);
         System.out.println("You moved to " + destinationRoom.getRoomID() + ".");
+
+         // Reset rehearsal bonus when moving to a different room
+        points.resetRehearsalBonus();
+    
         
         // Return true move was successful
         return true;
@@ -406,9 +410,6 @@ public class Actor {
         String abandonedRole = currentRole;
         currentRole = null;
         this.isExtraRole = false;
-        
-        // Reset rehearsal tokens
-        points.resetRehearsalBonus();
         
         return true;
     }
