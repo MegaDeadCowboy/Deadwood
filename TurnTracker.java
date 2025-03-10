@@ -28,12 +28,17 @@ public class TurnTracker {
         
         // Advance to the next player
         currentPlayerIndex = (currentPlayerIndex + 1) % players.size();
-
+    
         // If we've looped back to the first player, we've completed a round
         if (currentPlayerIndex == 0) {
             System.out.println("All players have taken their turn. Starting new round.");
+            
+            // Check if all scenes are wrapped to end the day
+            if (checkAllScenesWrapped()) {
+                System.out.println("All scenes are wrapped! Day is ending...");
+                initiateNewDay();
+            }
         } 
-        
     }
 
     private boolean checkAllScenesWrapped() {
