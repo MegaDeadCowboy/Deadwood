@@ -1,3 +1,5 @@
+package deadwood.model;
+
 import java.util.List;
 
 // Room child that can contain a set

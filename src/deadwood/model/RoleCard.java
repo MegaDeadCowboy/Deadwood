@@ -1,5 +1,9 @@
+package deadwood.model;
+
 import java.util.ArrayList;
 import java.util.List;
+
+
 
 // Object holding role information
 public class RoleCard {

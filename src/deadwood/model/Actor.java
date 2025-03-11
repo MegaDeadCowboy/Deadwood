@@ -1,3 +1,13 @@
+package deadwood.model;
+
+import deadwood.model.CastingOffice;
+import deadwood.controller.GameBoard;
+import deadwood.model.PlayerLocation;
+import deadwood.model.PointTracker;
+import deadwood.model.RoleCard;
+import deadwood.model.Room;
+import deadwood.model.Set;
+import deadwood.model.RoleCard.Role;
 import java.util.List;
 import java.util.ArrayList;
 

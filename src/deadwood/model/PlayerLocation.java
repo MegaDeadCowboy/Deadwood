@@ -1,3 +1,4 @@
+package deadwood.model;
 
 // Model, tracks player locations
 import java.util.List;

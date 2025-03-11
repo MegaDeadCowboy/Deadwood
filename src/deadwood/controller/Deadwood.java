@@ -1,4 +1,8 @@
-// Modified Deadwood.java
+package deadwood.controller;
+
+import deadwood.model.Actor;
+import deadwood.view.BoardLayersListener;
+
 public class Deadwood {
     public static void main(String[] args) {
         System.out.println("Welcome to Deadwood! Initializing game...");

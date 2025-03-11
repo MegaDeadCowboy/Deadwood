@@ -1,4 +1,9 @@
+package deadwood.controller;
+
 import java.util.List;
+
+import deadwood.model.*;
+import deadwood.controller.*;
 
 public class TurnTracker {
     private int currentPlayerIndex;

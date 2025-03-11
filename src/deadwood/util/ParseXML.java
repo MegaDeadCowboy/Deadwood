@@ -1,3 +1,5 @@
+package deadwood.util;
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -18,7 +20,10 @@ public class ParseXML {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder db = dbf.newDocumentBuilder();
         
+        File xmlFile = new File("resources/xml/" + filename);
+        System.out.println("Trying to load XML file from: " + xmlFile.getAbsolutePath());
+        System.out.println("File exists: " + xmlFile.exists());
         // Parse the XML file and return the Document
-        return db.parse(new File(filename));
+        return db.parse(xmlFile);
     }
 }

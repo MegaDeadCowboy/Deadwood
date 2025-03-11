@@ -1,4 +1,11 @@
+package deadwood.model;
+
 import java.util.List;
+
+import deadwood.model.Actor;
+import deadwood.model.Trailer;
+
+import deadwood.controller.GameBoard;
 
 //Model, determines end of game, starts new day
 public class DayTracker {

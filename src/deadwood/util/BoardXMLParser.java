@@ -1,12 +1,22 @@
+package deadwood.util;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import deadwood.model.Room;
+import deadwood.model.RoleCard;
+import deadwood.model.Set;
+import deadwood.model.CastingOffice;
+import deadwood.model.Trailer;
+import deadwood.model.FilmSetRoom;
 
 public class BoardXMLParser {
     private Document doc;

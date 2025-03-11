@@ -1,9 +1,23 @@
+package deadwood.controller;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.w3c.dom.Document;
+
+import deadwood.model.Actor;
+import deadwood.model.Room;
+import deadwood.model.DayTracker;
+import deadwood.model.RoleCard;
+import deadwood.model.Trailer;
+import deadwood.model.CastingOffice;
+import deadwood.model.Set;
+
+import deadwood.util.BoardXMLParser;
+import deadwood.util.CardXMLParser;
+import deadwood.util.ParseXML;
 
 // Initializes the game
 public class GameBoard {
@@ -96,7 +110,7 @@ public class GameBoard {
         try {
             // Parse cards XML
             ParseXML parser = new ParseXML();
-            Document cardDoc = parser.getDocFromFile("cards.xml");
+            Document cardDoc = parser.getDocFromFile("cards.xml");  // Just pass the filename
             
             // Use CardXMLParser to extract card information
             CardXMLParser cardParser = new CardXMLParser(cardDoc);

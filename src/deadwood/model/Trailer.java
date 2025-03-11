@@ -1,5 +1,11 @@
+package deadwood.model;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import deadwood.model.Actor;
+
+import deadwood.controller.GameBoard;
 
 // Starting room
 public class Trailer extends Room {

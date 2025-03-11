@@ -1,5 +1,11 @@
+package deadwood.view;
 import java.awt.*;
 import javax.swing.*;
+
+import deadwood.model.*;
+
+import deadwood.controller.GameBoard;
+
 import java.awt.event.*;
 import java.util.HashMap;
 import java.util.List;
@@ -11,7 +17,8 @@ public class BoardLayersListener extends JFrame {
     private JLabel boardlabel;
     private JLabel currentPlayerLabel;
     private Map<Integer, JLabel> playerIcons;
-    private String[] diceColors = {"b", "c", "g", "o", "p", "r", "v", "y"}; // Color codes for players
+    // In BoardLayersListener.java
+private String[] diceColors = {"b", "c", "b", "c"}; // Only use blue and cyan if those are the only ones you have
     
     // Buttons
     private JButton bAct, bRehearse, bMove, bEndTurn;
@@ -25,7 +32,7 @@ public class BoardLayersListener extends JFrame {
         bPane = getLayeredPane();
         
         // Load Board Background
-        boardlabel = new JLabel(new ImageIcon("board.jpg"));
+        boardlabel = new JLabel(new ImageIcon("resources/images/board.jpg"));
         boardlabel.setBounds(0, 0, boardlabel.getIcon().getIconWidth(), boardlabel.getIcon().getIconHeight());
         bPane.add(boardlabel, 0);
         
@@ -48,7 +55,7 @@ public class BoardLayersListener extends JFrame {
         int x = 1000, y = 300; // Initial placement in the trailer
         for (Actor player : gameBoard.getAllPlayers()) {
             int playerIndex = (player.getPlayerID() - 1) % diceColors.length; // Cycle through colors
-            String diceImage = diceColors[playerIndex] + "1.png"; // Assign color with side 1
+            String diceImage ="resources/images/dice/" + diceColors[playerIndex] + "1.png"; // Assign color with side 1
     
             System.out.println("Loading image: " + diceImage + " for Player " + player.getPlayerID());
     

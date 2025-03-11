@@ -1,6 +1,10 @@
+package deadwood.controller;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
+import deadwood.model.*;
 
 // Main view for the player until we implement the GUI
 public class PlayerInterface {

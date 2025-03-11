@@ -1,3 +1,5 @@
+package deadwood.model;
+
 import java.util.ArrayList;
 import java.util.List;
 
