@@ -1,9 +1,21 @@
 package deadwood.controller;
 
 import deadwood.model.Actor;
-import deadwood.view.BoardLayersListener;
-
+import deadwood.view.GameView;
+import deadwood.view.PlayerInterface;
+/**
+ * Main entry point for the Deadwood game.
+ * Supports both GUI and text-based interfaces.
+ */
 public class Deadwood {
+    
+    /**
+     * Main method to start the game
+     * 
+     * @param args Command line arguments:
+     *             args[0] = number of players (2-8)
+     *             args[1] = interface mode (optional, "gui" or "text", defaults to "gui")
+     */
     public static void main(String[] args) {
         System.out.println("Welcome to Deadwood! Initializing game...");
 
@@ -41,8 +53,7 @@ public class Deadwood {
             // Start the GUI version
             System.out.println("Starting Deadwood with GUI interface...");
             javax.swing.SwingUtilities.invokeLater(() -> {
-                BoardLayersListener board = new BoardLayersListener(numPlayers);
-                board.setVisible(true);
+                GameView gameView = new GameView(numPlayers);
             });
         } else {
             // Start the text-based version

@@ -17,7 +17,7 @@
             "request": "launch",
             "mainClass": "deadwood.controller.Deadwood",
             "projectName": "Deadwood_61c884c",
-            "args": ["4"]
+            "args": ["2"]
         },
         {
             "type": "java",
