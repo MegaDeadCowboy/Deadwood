@@ -48,8 +48,8 @@ public class GameView extends JFrame {
         
         // Scale down the board to 85% of its original size
         Dimension originalSize = boardPanel.getPreferredSize();
-        int scaledWidth = (int)(originalSize.width * 0.80);
-        int scaledHeight = (int)(originalSize.height * 0.80);
+        int scaledWidth = (int)(originalSize.width * 0.75);
+        int scaledHeight = (int)(originalSize.height * 0.75);
         boardPanel.setPreferredSize(new Dimension(scaledWidth, scaledHeight));
         boardPanel.setMinimumSize(new Dimension(scaledWidth - 50, scaledHeight - 50)); // Allow further compression if needed
         
