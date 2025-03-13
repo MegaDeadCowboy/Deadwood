@@ -27,7 +27,7 @@ public class SceneInfoPanel extends JPanel {
             TitledBorder.TOP));
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension(230, 180));
+        setPreferredSize(new Dimension(260, 180));
         
         // Initialize components
         initializeComponents();
