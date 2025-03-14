@@ -3,27 +3,34 @@ package deadwood.view;
 import java.awt.*;
 import javax.swing.*;
 import java.util.*;
-import deadwood.model.*;
-import deadwood.controller.GameBoard;
+import java.util.List;
 
+import deadwood.controller.GameController;
+import deadwood.model.PlayerLocation;
+import deadwood.controller.GameController.BoardViewModel;
+import deadwood.controller.GameController.PlayerTokenViewModel;
+import deadwood.controller.GameController.ShotCounterViewModel;
 
-public class BoardPanel extends JPanel {
+/**
+ * Panel for displaying the game board and player tokens.
+ * Refactored to use the MVC pattern with GameController.
+ * Game logic has been moved to the model (PlayerLocation).
+ */
+public class BoardPanel extends JPanel implements GameController.GameObserver {
 
-    private GameBoard gameBoard;
+    private GameController controller;
     private JLabel boardLabel;
     private Map<Integer, JLabel> playerTokens;
     private Map<String, JLabel> shotCounters;
-    private Map<String, Point> roomPositions;
     private double scaleFactor = 1.0; // Scale factor for the board
     
-    public BoardPanel(GameBoard gameBoard) {
-        this.gameBoard = gameBoard;
+    public BoardPanel(GameController controller) {
+        this.controller = controller;
+        this.controller.registerObserver(this);
         this.playerTokens = new HashMap<>();
         this.shotCounters = new HashMap<>();
         
-
         setLayout(null);
-        initializeRoomPositions();
         
         // Load the board image
         ImageIcon boardImage = new ImageIcon("resources/images/board.jpg");
@@ -34,11 +41,11 @@ public class BoardPanel extends JPanel {
         // Set the size of this panel
         setPreferredSize(new Dimension(boardImage.getIconWidth(), boardImage.getIconHeight()));
         
-        // Initialize player tokens
-        initializePlayerTokens();
-        
-        // Initialize shot counters
+        // Initialize shot counters for all scene rooms
         initializeShotCounters();
+        
+        // Update the board with initial state
+        updateBoard();
     }
     
     @Override
@@ -55,7 +62,7 @@ public class BoardPanel extends JPanel {
             (double) preferredSize.height / originalSize.height
         );
         
-        // Resize the board image if it exists
+        // Resize the board image
         if (boardLabel != null) {
             // Scale the board image
             ImageIcon originalIcon = (ImageIcon) boardLabel.getIcon();
@@ -68,144 +75,19 @@ public class BoardPanel extends JPanel {
             
             boardLabel.setIcon(scaledIcon);
             boardLabel.setBounds(0, 0, newWidth, newHeight);
-            
-            // Update room positions based on scale factor
-            updateRoomPositions();
-            
-            // Update player tokens and shot counters
-            updateTokensAndCounters();
-        }
-    }
-    
-    private void updateTokensAndCounters() {
-        // Update player token positions
-        for (Actor player : gameBoard.getAllPlayers()) {
-            updatePlayerPosition(player);
         }
         
-        // Update shot counter positions
-        for (String roomID : shotCounters.keySet()) {
-            Point roomPos = roomPositions.get(roomID.toLowerCase());
-            JLabel counter = shotCounters.get(roomID);
-            
-            if (roomPos != null && counter != null) {
-                counter.setBounds(
-                    (int) (roomPos.x - 15 * scaleFactor), 
-                    (int) (roomPos.y - 30 * scaleFactor), 
-                    (int) (30 * scaleFactor), 
-                    (int) (20 * scaleFactor)
-                );
-                
-                // Scale font size
-                int fontSize = (int) (16 * scaleFactor);
-                counter.setFont(new Font("Arial", Font.BOLD, Math.max(fontSize, 10))); // Minimum font size of 10
-            }
-        }
+        // Update board state with new scale factor
+        updateBoard();
     }
     
-    private void updateRoomPositions() {
-        Map<String, Point> originalPositions = new HashMap<>();
-        originalPositions.put("trailer", new Point(991, 248));
-        originalPositions.put("office", new Point(991, 452));
-        originalPositions.put("train station", new Point(114, 69));
-        originalPositions.put("secret hideout", new Point(116, 432));
-        originalPositions.put("church", new Point(639, 432));
-        originalPositions.put("hotel", new Point(908, 432));
-        originalPositions.put("main street", new Point(637, 69));
-        originalPositions.put("jail", new Point(909, 69));
-        originalPositions.put("general store", new Point(239, 165));
-        originalPositions.put("ranch", new Point(372, 249));
-        originalPositions.put("bank", new Point(495, 249));
-        originalPositions.put("saloon", new Point(628, 249));
-        
-        // Scale all positions
-        roomPositions.clear();
-        for (String roomID : originalPositions.keySet()) {
-            Point originalPoint = originalPositions.get(roomID);
-            roomPositions.put(roomID, new Point(
-                (int) (originalPoint.x * scaleFactor),
-                (int) (originalPoint.y * scaleFactor)
-            ));
-        }
-    }
-    
-    //Initializes the predefined positions for each room on the board
-    private void initializeRoomPositions() {
-        roomPositions = new HashMap<>();
-        roomPositions.put("trailer", new Point(991, 248));
-        roomPositions.put("office", new Point(991, 452));
-        roomPositions.put("train station", new Point(114, 69));
-        roomPositions.put("secret hideout", new Point(116, 432));
-        roomPositions.put("church", new Point(639, 432));
-        roomPositions.put("hotel", new Point(908, 432));
-        roomPositions.put("main street", new Point(637, 69));
-        roomPositions.put("jail", new Point(909, 69));
-        roomPositions.put("general store", new Point(239, 165));
-        roomPositions.put("ranch", new Point(372, 249));
-        roomPositions.put("bank", new Point(495, 249));
-        roomPositions.put("saloon", new Point(628, 249));
-    }
-    
-    private void initializePlayerTokens() {
-        String[] diceColors = {"b", "c", "g", "o", "p", "r", "v", "w", "y"};
-        Room trailer = gameBoard.getRoomByID("trailer");
-        
-        // Starting position in the trailer
-        int baseX = roomPositions.get("trailer").x;
-        int baseY = roomPositions.get("trailer").y;
-        
-        for (Actor player : gameBoard.getAllPlayers()) {
-            int playerID = player.getPlayerID();
-            
-            // Cycle through available dice colors
-            int colorIndex = (playerID - 1) % diceColors.length;
-            String diceColor = diceColors[colorIndex];
-            
-            // Load the dice image
-            String diceImagePath = "resources/images/dice/" + diceColor + "1.png";
-            ImageIcon diceIcon = new ImageIcon(diceImagePath);
-            
-            // Scale the dice image
-            Image diceImage = diceIcon.getImage();
-            int diceWidth = (int)(diceIcon.getIconWidth() * scaleFactor);
-            int diceHeight = (int)(diceIcon.getIconHeight() * scaleFactor);
-            Image scaledDice = diceImage.getScaledInstance(diceWidth, diceHeight, Image.SCALE_SMOOTH);
-            diceIcon = new ImageIcon(scaledDice);
-            
-            // Create the player token label
-            JLabel playerToken = new JLabel(diceIcon);
-            
-            // Position with slight offset to prevent exact overlap
-            int offsetX = (int)(((playerID - 1) % 3) * 20 * scaleFactor);
-            int offsetY = (int)(((playerID - 1) / 3) * 20 * scaleFactor);
-            playerToken.setBounds(baseX + offsetX, baseY + offsetY, 
-                                 diceIcon.getIconWidth(), diceIcon.getIconHeight());
-            
-            // Make sure the token is visible
-            playerToken.setVisible(true);
-            
-            // Add the token to the panel - add it after the board but make sure it's visible
-            add(playerToken);
-            // Make sure player tokens appear on top of the board
-            setComponentZOrder(playerToken, 0);
-            
-            // Store for future reference
-            playerTokens.put(playerID, playerToken);
-        }
-    }
-    
+    /**
+     * Initializes shot counter labels for all scene rooms
+     */
     private void initializeShotCounters() {
-        // Get all rooms that can have sets
-        for (String roomID : gameBoard.getAllRoomNames()) {
-            Room room = gameBoard.getRoomByID(roomID);
-            
-            // Skip rooms that can't have sets (like Trailer, Office)
-            if (room instanceof Trailer || room instanceof CastingOffice) {
-                continue;
-            }
-            
+        for (String roomID : PlayerLocation.getSceneRoomIDs()) {
             // Get position for this room
-            Point position = roomPositions.get(roomID.toLowerCase());
+            Point position = PlayerLocation.getRoomPosition(roomID.toLowerCase());
             if (position == null) {
                 System.out.println("Warning: No position found for room: " + roomID);
                 continue;
@@ -213,39 +95,38 @@ public class BoardPanel extends JPanel {
             
             // Create shot counter label
             JLabel shotCounter = new JLabel("0");
-            shotCounter.setBounds(position.x - (int)(15 * scaleFactor), 
-                                 position.y - (int)(30 * scaleFactor), 
-                                 (int)(30 * scaleFactor), 
-                                 (int)(20 * scaleFactor));
             shotCounter.setForeground(Color.RED);
-            shotCounter.setFont(new Font("Arial", Font.BOLD, (int)(16 * scaleFactor)));
+            shotCounter.setFont(new Font("Arial", Font.BOLD, 16));
             shotCounter.setVisible(false); // Hide initially
             
             // Add to panel
             add(shotCounter);
-            // Set shot counters to appear above the board but below player tokens
-            setComponentZOrder(shotCounter, 1);
             
             // Store for future reference
             shotCounters.put(roomID.toLowerCase(), shotCounter);
         }
     }
     
-    //Updates the visual state of the board
+    /**
+     * Updates the visual state of the board
+     */
     public void updateBoard() {
-        for (Actor player : gameBoard.getAllPlayers()) {
-            updatePlayerPosition(player);
-        }
+        // Get board view model from controller
+        BoardViewModel boardVM = controller.getBoardViewModel();
+        
+        // Update player tokens
+        updatePlayerTokens(boardVM.getPlayerTokens());
         
         // Update shot counters
-        updateShotCounters();
-        
-        // Highlight current player
-        highlightCurrentPlayer();
+        updateShotCounters(boardVM.getShotCounters());
         
         // Ensure proper z-order for all components
         for (JLabel token : playerTokens.values()) {
             setComponentZOrder(token, 0);
+        }
+        
+        for (JLabel counter : shotCounters.values()) {
+            setComponentZOrder(counter, 1);
         }
         
         // Refresh display
@@ -253,76 +134,156 @@ public class BoardPanel extends JPanel {
         repaint();
     }
     
-    //Updates the position of a player token based on their current room
-    private void updatePlayerPosition(Actor player) {
-        Room currentRoom = player.getLocation().getCurrentRoom();
-        if (currentRoom == null) {
-            return;
-        }
+    /**
+     * Updates all player tokens based on view models
+     */
+    private void updatePlayerTokens(List<PlayerTokenViewModel> tokenViewModels) {
+        // Track current tokens to remove old ones
+        Set<Integer> updatedPlayerIds = new HashSet<>();
         
-        JLabel playerToken = playerTokens.get(player.getPlayerID());
-        if (playerToken == null) {
-            return;
-        }
-        
-        // Get the base position for the room
-        String roomID = currentRoom.getRoomID().toLowerCase();
-        Point roomPos = roomPositions.get(roomID);
-        
-        if (roomPos == null) {
-            System.out.println("Warning: No position found for room: " + roomID);
-            return;
-        }
-        
-        // Add offset based on player ID to prevent exact overlap
-        int playerID = player.getPlayerID();
-        int offsetX = (int)(((playerID - 1) % 3) * 20 * scaleFactor);
-        int offsetY = (int)(((playerID - 1) / 3) * 20 * scaleFactor);
-        
-        // Update token position
-        playerToken.setLocation(roomPos.x + offsetX, roomPos.y + offsetY);
-        playerToken.setVisible(true);
-    }
-    
-    private void updateShotCounters() {
-        for (String roomID : gameBoard.getAllRoomNames()) {
-            Room room = gameBoard.getRoomByID(roomID);
+        for (PlayerTokenViewModel tokenVM : tokenViewModels) {
+            updatedPlayerIds.add(tokenVM.getPlayerId());
             
-            // Skip rooms that can't have sets
-            if (room instanceof Trailer || room instanceof CastingOffice) {
-                continue;
+            // Get or create the token label
+            JLabel tokenLabel = playerTokens.get(tokenVM.getPlayerId());
+            if (tokenLabel == null) {
+                tokenLabel = createPlayerTokenLabel(tokenVM);
+                playerTokens.put(tokenVM.getPlayerId(), tokenLabel);
             }
             
-            deadwood.model.Set currentSet = room.getSet();
-            JLabel shotCounter = shotCounters.get(roomID.toLowerCase());
+            // Update token position
+            updatePlayerTokenPosition(tokenLabel, tokenVM);
             
-            if (shotCounter != null) {
-                if (currentSet != null && currentSet.isActive()) {
-                    shotCounter.setText(String.valueOf(currentSet.getShotCounter()));
-                    shotCounter.setVisible(true);
-                } else {
-                    shotCounter.setVisible(false);
-                }
+            // Update token appearance
+            if (tokenVM.isCurrentPlayer()) {
+                int borderSize = Math.max(2, (int)(2 * scaleFactor));
+                tokenLabel.setBorder(BorderFactory.createLineBorder(Color.YELLOW, borderSize));
+            } else {
+                tokenLabel.setBorder(null);
+            }
+        }
+        
+        // Remove tokens for players that no longer exist
+        List<Integer> tokensToRemove = new ArrayList<>();
+        for (Integer playerId : playerTokens.keySet()) {
+            if (!updatedPlayerIds.contains(playerId)) {
+                tokensToRemove.add(playerId);
+            }
+        }
+        
+        for (Integer playerId : tokensToRemove) {
+            JLabel tokenLabel = playerTokens.remove(playerId);
+            if (tokenLabel != null) {
+                remove(tokenLabel);
             }
         }
     }
     
     /**
-     * Highlights the current player's token
+     * Creates a new player token label
      */
-    private void highlightCurrentPlayer() {
-        // Remove highlight from all tokens
-        for (JLabel token : playerTokens.values()) {
-            token.setBorder(null);
+    private JLabel createPlayerTokenLabel(PlayerTokenViewModel tokenVM) {
+        // Load the dice image
+        String diceImagePath = "resources/images/dice/" + tokenVM.getDiceColor() + "1.png";
+        ImageIcon diceIcon = new ImageIcon(diceImagePath);
+        
+        // Scale the dice image
+        Image diceImage = diceIcon.getImage();
+        int diceWidth = (int)(diceIcon.getIconWidth() * scaleFactor);
+        int diceHeight = (int)(diceIcon.getIconHeight() * scaleFactor);
+        Image scaledDice = diceImage.getScaledInstance(diceWidth, diceHeight, Image.SCALE_SMOOTH);
+        diceIcon = new ImageIcon(scaledDice);
+        
+        // Create the player token label
+        JLabel playerToken = new JLabel(diceIcon);
+        playerToken.setVisible(true);
+        
+        // Add to panel
+        add(playerToken);
+        setComponentZOrder(playerToken, 0);
+        
+        return playerToken;
+    }
+    
+    /**
+     * Updates a player token's position
+     */
+    private void updatePlayerTokenPosition(JLabel tokenLabel, PlayerTokenViewModel tokenVM) {
+        if (tokenVM.getRoomId() == null) {
+            tokenLabel.setVisible(false);
+            return;
         }
         
-        // Highlight current player's token
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
-        JLabel currentToken = playerTokens.get(currentPlayer.getPlayerID());
-        
-        if (currentToken != null) {
-            int borderSize = Math.max(2, (int)(2 * scaleFactor));
-            currentToken.setBorder(BorderFactory.createLineBorder(Color.YELLOW, borderSize));
+        // Get the scaled position for the room from the PlayerLocation model
+        Point roomPos = PlayerLocation.getScaledRoomPosition(tokenVM.getRoomId(), scaleFactor);
+        if (roomPos == null) {
+            tokenLabel.setVisible(false);
+            return;
         }
+        
+        // Add offset based on player ID to prevent exact overlap
+        int playerID = tokenVM.getPlayerId();
+        int offsetX = (int)(((playerID - 1) % 3) * 20 * scaleFactor);
+        int offsetY = (int)(((playerID - 1) / 3) * 20 * scaleFactor);
+        
+        // Update token position
+        tokenLabel.setLocation(roomPos.x + offsetX, roomPos.y + offsetY);
+        tokenLabel.setVisible(true);
+    }
+    
+    /**
+     * Updates shot counters based on view models
+     */
+    private void updateShotCounters(List<ShotCounterViewModel> counterViewModels) {
+        for (ShotCounterViewModel counterVM : counterViewModels) {
+            JLabel counterLabel = shotCounters.get(counterVM.getRoomId());
+            if (counterLabel == null) {
+                continue;
+            }
+            
+            // Get the scaled position for the room from the PlayerLocation model
+            Point roomPos = PlayerLocation.getScaledRoomPosition(counterVM.getRoomId(), scaleFactor);
+            if (roomPos == null) {
+                counterLabel.setVisible(false);
+                continue;
+            }
+            
+            // Update position and size
+            counterLabel.setBounds(
+                (int)(roomPos.x - 15 * scaleFactor),
+                (int)(roomPos.y - 30 * scaleFactor),
+                (int)(30 * scaleFactor),
+                (int)(20 * scaleFactor)
+            );
+            
+            // Update font size
+            int fontSize = (int)(16 * scaleFactor);
+            counterLabel.setFont(new Font("Arial", Font.BOLD, Math.max(fontSize, 10))); // Minimum font size of 10
+            
+            // Update text and visibility
+            counterLabel.setText(String.valueOf(counterVM.getShotsRemaining()));
+            counterLabel.setVisible(counterVM.isVisible());
+        }
+    }
+    
+    // GameObserver methods
+    @Override
+    public void onGameStateChanged() {
+        updateBoard();
+    }
+    
+    @Override
+    public void onPlayerChanged(GameController.PlayerViewModel player) {
+        updateBoard();
+    }
+    
+    @Override
+    public void onSceneChanged(GameController.SceneViewModel scene) {
+        updateBoard();
+    }
+    
+    @Override
+    public void onBoardChanged() {
+        updateBoard();
     }
 }

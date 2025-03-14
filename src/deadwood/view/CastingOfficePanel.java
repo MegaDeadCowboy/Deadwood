@@ -4,20 +4,28 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.table.*;
-import deadwood.model.*;
-import deadwood.controller.GameBoard;
+import java.util.List;
 
-public class CastingOfficePanel extends JPanel {
+import deadwood.controller.GameController;
+import deadwood.controller.GameController.PlayerViewModel;
+import deadwood.controller.GameController.UpgradeViewModel;
 
-    private GameBoard gameBoard;
+/**
+ * Panel for rank upgrades in the Casting Office.
+ * Refactored to use the MVC pattern with GameController.
+ */
+public class CastingOfficePanel extends JPanel implements GameController.GameObserver {
+
+    private GameController controller;
     private GameView parentView;
     private JTable upgradeTable;
     private JButton cashUpgradeButton;
     private JButton creditUpgradeButton;
     
-    public CastingOfficePanel(GameBoard gameBoard, GameView parentView) {
-        this.gameBoard = gameBoard;
+    public CastingOfficePanel(GameController controller, GameView parentView) {
+        this.controller = controller;
         this.parentView = parentView;
+        this.controller.registerObserver(this);
         
         // Set panel properties
         setBorder(BorderFactory.createTitledBorder(
@@ -27,7 +35,7 @@ public class CastingOfficePanel extends JPanel {
             TitledBorder.TOP));
         
         setLayout(new BorderLayout(0, 10));
-        setPreferredSize(new Dimension(230, 180));
+        setPreferredSize(new Dimension(260, 180));
         
         // Initialize components
         initializeComponents();
@@ -36,7 +44,6 @@ public class CastingOfficePanel extends JPanel {
         updateVisibility();
     }
     
- 
     private void initializeComponents() {
         // Create upgrade table
         String[] columnNames = {"Rank", "Cash Cost", "Credit Cost"};
@@ -68,7 +75,7 @@ public class CastingOfficePanel extends JPanel {
         
         // Create scroll pane for table
         JScrollPane tableScrollPane = new JScrollPane(upgradeTable);
-        tableScrollPane.setPreferredSize(new Dimension(210, 100));
+        tableScrollPane.setPreferredSize(new Dimension(230, 100));
         
         // Create buttons panel
         JPanel buttonsPanel = new JPanel(new GridLayout(1, 2, 10, 0));
@@ -94,21 +101,21 @@ public class CastingOfficePanel extends JPanel {
      * Updates panel visibility based on player location
      */
     public void updateVisibility() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
-        if (currentPlayer == null) {
+        if (player == null) {
             setVisible(false);
             return;
         }
         
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        String currentRoom = player.getCurrentLocation();
         
         // Only show when player is in the Casting Office
-        boolean inCastingOffice = (currentRoom instanceof CastingOffice);
+        boolean inCastingOffice = "Casting Office".equalsIgnoreCase(currentRoom);
         setVisible(inCastingOffice);
         
         // Update button enabled state - only enable if player has no role
-        boolean canUpgrade = inCastingOffice && (currentPlayer.getCurrentRole() == null);
+        boolean canUpgrade = inCastingOffice && (player.getCurrentRole() == null);
         cashUpgradeButton.setEnabled(canUpgrade);
         creditUpgradeButton.setEnabled(canUpgrade);
     }
@@ -117,7 +124,7 @@ public class CastingOfficePanel extends JPanel {
      * Handles upgrade button click
      */
     private void handleUpgrade(String paymentType) {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
         // Get selected rank
         int selectedRow = upgradeTable.getSelectedRow();
@@ -131,7 +138,7 @@ public class CastingOfficePanel extends JPanel {
         
         // Calculate target rank (row index + 2)
         int targetRank = selectedRow + 2;
-        int currentRank = currentPlayer.getCurrentRank();
+        int currentRank = player.getRank();
         
         // Can't downgrade or stay at same rank
         if (targetRank <= currentRank) {
@@ -143,7 +150,7 @@ public class CastingOfficePanel extends JPanel {
         }
         
         // Attempt to upgrade
-        boolean success = currentPlayer.inputUpgrade(targetRank, paymentType);
+        boolean success = controller.upgradeRank(targetRank, paymentType);
         
         if (success) {
             JOptionPane.showMessageDialog(parentView, 
@@ -151,12 +158,8 @@ public class CastingOfficePanel extends JPanel {
                 "Upgrade Complete", 
                 JOptionPane.INFORMATION_MESSAGE);
             
-            // Update UI
-            parentView.updateGameState();
-            
             // End turn after successful upgrade
-            // Access the control panel through the parent view to end the turn
-            parentView.endTurn();
+            controller.endTurn();
         } else {
             // Calculate required amount
             String costType = paymentType.equals("cash") ? "dollars" : "credits";
@@ -172,5 +175,25 @@ public class CastingOfficePanel extends JPanel {
                 "Insufficient Funds", 
                 JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    @Override
+    public void onGameStateChanged() {
+        updateVisibility();
+    }
+
+    @Override
+    public void onPlayerChanged(PlayerViewModel player) {
+        updateVisibility();
+    }
+
+    @Override
+    public void onSceneChanged(GameController.SceneViewModel scene) {
+        // Not directly relevant for casting office
+    }
+
+    @Override
+    public void onBoardChanged() {
+        // Not directly relevant for casting office
     }
 }

@@ -3,10 +3,7 @@ package deadwood.controller;
 import deadwood.model.Actor;
 import deadwood.view.GameView;
 import deadwood.view.PlayerInterface;
-/**
- * Main entry point for the Deadwood game.
- * Supports both GUI and text-based interfaces.
- */
+
 public class Deadwood {
     
     /**

@@ -3,20 +3,21 @@ package deadwood.view;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import deadwood.model.*;
-import deadwood.controller.GameBoard;
 
-//Panel for displaying information about the current player.
-public class PlayerInfoPanel extends JPanel {
+import deadwood.controller.GameController;
+import deadwood.controller.GameController.PlayerViewModel;
 
-    private GameBoard gameBoard;
+public class PlayerInfoPanel extends JPanel implements GameController.GameObserver {
+
+    private GameController controller;
     private JLabel playerIdLabel;
     private JLabel playerStatsLabel;
     private JLabel playerRoleLabel;
     private JLabel rehearsalBonusLabel;
 
-    public PlayerInfoPanel(GameBoard gameBoard) {
-        this.gameBoard = gameBoard;
+    public PlayerInfoPanel(GameController controller) {
+        this.controller = controller;
+        this.controller.registerObserver(this);
         
         // Set panel properties
         setBorder(BorderFactory.createTitledBorder(
@@ -26,7 +27,7 @@ public class PlayerInfoPanel extends JPanel {
             TitledBorder.TOP));
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension(230, 150));
+        setPreferredSize(new Dimension(260, 150));
         
         // Initialize components
         initializeComponents();
@@ -66,51 +67,72 @@ public class PlayerInfoPanel extends JPanel {
     }
     
     public void updatePlayerInfo() {
-        // Get current player information
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        // Get current player information from the controller
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
-        if (currentPlayer == null) {
+        if (player == null) {
             return;
         }
         
         // Update player ID label
-        playerIdLabel.setText("Current Player: P" + currentPlayer.getPlayerID());
+        playerIdLabel.setText("Current Player: P" + player.getPlayerId());
         
         // Update player stats (cash, credits, rank)
-        int cash = currentPlayer.getPoints().getPlayerCash();
-        int credits = currentPlayer.getPoints().getPlayerCredit();
-        int rank = currentPlayer.getCurrentRank();
-        playerStatsLabel.setText(String.format("$%d, %d credits, Rank %d", cash, credits, rank));
+        playerStatsLabel.setText(String.format("$%d, %d credits, Rank %d", 
+                                             player.getCash(), 
+                                             player.getCredits(), 
+                                             player.getRank()));
         
         // Update role information
-        String playerRole = currentPlayer.getCurrentRole();
+        String playerRole = player.getCurrentRole();
         
         if (playerRole != null) {
-            Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-            Set currentSet = (currentRoom != null) ? currentRoom.getSet() : null;
+            String roleDescription = playerRole;
             
-            String roleDescription = "Unknown";
-            String roleLine = "";
-            
-            if (currentSet != null) {
-                RoleCard.Role role = currentSet.getRole(playerRole);
-                if (role != null) {
-                    roleDescription = role.getName() + " (Rank " + role.getLevel() + ")";
-                    roleLine = "\"" + role.getLine() + "\"";
-                }
+            // Add role rank if available
+            if (player.getRoleRank() > 0) {
+                roleDescription += " (Rank " + player.getRoleRank() + ")";
             }
             
-            // Update role and line information
-            playerRoleLabel.setText("<html>Role: " + roleDescription + "<br>" + roleLine + "</html>");
+            // Add role type if available
+            if (player.isRoleExtra()) {
+                roleDescription += " [Extra]";
+            } else {
+                roleDescription += " [Starring]";
+            }
+            
+            // Format role and line information
+            String roleLine = player.getRoleLine() != null ? player.getRoleLine() : "";
+            playerRoleLabel.setText("<html>Role: " + roleDescription + "<br>\"" + roleLine + "\"</html>");
             
             // Update rehearsal bonus
-            int rehearsalBonus = currentPlayer.getPoints().getRehearsalBonus();
-            rehearsalBonusLabel.setText("Rehearsal Bonus: +" + rehearsalBonus);
+            rehearsalBonusLabel.setText("Rehearsal Bonus: +" + player.getRehearsalBonus());
             rehearsalBonusLabel.setVisible(true);
         } else {
             playerRoleLabel.setText("Role: None");
             rehearsalBonusLabel.setText("Rehearsal Bonus: 0");
             rehearsalBonusLabel.setVisible(false);
         }
+    }
+    
+    // GameObserver methods
+    @Override
+    public void onGameStateChanged() {
+        updatePlayerInfo();
+    }
+    
+    @Override
+    public void onPlayerChanged(PlayerViewModel player) {
+        updatePlayerInfo();
+    }
+    
+    @Override
+    public void onSceneChanged(GameController.SceneViewModel scene) {
+        // Not directly relevant for player info
+    }
+    
+    @Override
+    public void onBoardChanged() {
+        // Not directly relevant for player info
     }
 }

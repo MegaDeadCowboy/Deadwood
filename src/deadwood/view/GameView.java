@@ -1,14 +1,17 @@
 package deadwood.view;
 
-import deadwood.view.*;
 import java.awt.*;
 import javax.swing.*;
-import deadwood.controller.GameBoard;
 
-//Main container class for the Deadwood GUI.
+import deadwood.controller.GameController;
+
+/**
+ * Main container class for the Deadwood GUI.
+ * Refactored to use the MVC pattern with GameController.
+ */
 public class GameView extends JFrame {
 
-    private GameBoard gameBoard;
+    private GameController controller;
     private BoardPanel boardPanel;
     private PlayerInfoPanel playerInfoPanel;
     private GameControlPanel controlPanel;
@@ -17,14 +20,14 @@ public class GameView extends JFrame {
     private JPanel sidebarPanel;
     
     // Constants for layout dimensions
-    private static final int SIDEBAR_WIDTH = 260; // Width for sidebar
+    private static final int SIDEBAR_WIDTH = 260;
     
 
     public GameView(int numPlayers) {
         super("Deadwood - Board Game");
         
-        // Initialize game controller
-        this.gameBoard = new GameBoard(numPlayers);
+        // Initialize controller
+        this.controller = new GameController(numPlayers);
         
         // Setup frame properties
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -44,22 +47,22 @@ public class GameView extends JFrame {
      */
     private void initializeComponents() {
         // Create board panel with scaled down size
-        boardPanel = new BoardPanel(gameBoard);
+        boardPanel = new BoardPanel(controller);
         
         // Scale down the board to 85% of its original size
         Dimension originalSize = boardPanel.getPreferredSize();
-        int scaledWidth = (int)(originalSize.width * 0.75);
-        int scaledHeight = (int)(originalSize.height * 0.75);
+        int scaledWidth = (int)(originalSize.width * 0.85);
+        int scaledHeight = (int)(originalSize.height * 0.85);
         boardPanel.setPreferredSize(new Dimension(scaledWidth, scaledHeight));
         boardPanel.setMinimumSize(new Dimension(scaledWidth - 50, scaledHeight - 50)); // Allow further compression if needed
         
         // Create sidebar panels
-        controlPanel = new GameControlPanel(gameBoard, this);
-        playerInfoPanel = new PlayerInfoPanel(gameBoard);
-        sceneInfoPanel = new SceneInfoPanel(gameBoard);
-        castingOfficePanel = new CastingOfficePanel(gameBoard, this);
+        controlPanel = new GameControlPanel(controller, this);
+        playerInfoPanel = new PlayerInfoPanel(controller);
+        sceneInfoPanel = new SceneInfoPanel(controller);
+        castingOfficePanel = new CastingOfficePanel(controller, this);
         
-        // Create sidebar container with fixed width
+        // Create sidebar container
         sidebarPanel = new JPanel();
         sidebarPanel.setLayout(new BoxLayout(sidebarPanel, BoxLayout.Y_AXIS));
         sidebarPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
@@ -109,33 +112,16 @@ public class GameView extends JFrame {
             boardPanel.getPreferredSize().width + SIDEBAR_WIDTH + 80,
             boardPanel.getPreferredSize().height + 100
         ));
-        
-        // Update all panels with initial state
-        updateGameState();
     }
     
     /**
      * Updates all components to reflect current game state
+     * This is now handled by the observer pattern
      */
     public void updateGameState() {
-        boardPanel.updateBoard();
-        playerInfoPanel.updatePlayerInfo();
-        sceneInfoPanel.updateSceneInfo();
-        controlPanel.updateButtonStates();
-        castingOfficePanel.updateVisibility();
-        
-        // Repaint the frame
+        // No longer needed as each component observes the controller directly
         revalidate();
         repaint();
-    }
-    
-    /**
-     * Ends the current player's turn
-     * Called by components that need to end the turn
-     */
-    public void endTurn() {
-        gameBoard.endTurn();
-        updateGameState();
     }
     
     /**

@@ -3,21 +3,25 @@ package deadwood.view;
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
-import deadwood.model.*;
-import deadwood.controller.GameBoard;
 
+import deadwood.controller.GameController;
+import deadwood.controller.GameController.SceneViewModel;
 
-//Panel for displaying information about the current scene.
-public class SceneInfoPanel extends JPanel {
+/**
+ * Panel for displaying information about the current scene.
+ * Refactored to use the MVC pattern with GameController.
+ */
+public class SceneInfoPanel extends JPanel implements GameController.GameObserver {
 
-    private GameBoard gameBoard;
+    private GameController controller;
     private JLabel sceneNameLabel;
     private JLabel sceneBudgetLabel;
     private JLabel sceneShotsLabel;
     private JTextArea sceneDescriptionArea;
 
-    public SceneInfoPanel(GameBoard gameBoard) {
-        this.gameBoard = gameBoard;
+    public SceneInfoPanel(GameController controller) {
+        this.controller = controller;
+        this.controller.registerObserver(this);
         
         // Set panel properties
         setBorder(BorderFactory.createTitledBorder(
@@ -36,7 +40,6 @@ public class SceneInfoPanel extends JPanel {
         updateSceneInfo();
     }
     
-
     private void initializeComponents() {
         // Scene name label
         sceneNameLabel = new JLabel("No active scene");
@@ -71,43 +74,20 @@ public class SceneInfoPanel extends JPanel {
         add(scrollPane);
     }
     
-
     public void updateSceneInfo() {
-        // Get current player and room
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        // Get current scene information from the controller
+        SceneViewModel scene = controller.getCurrentSceneViewModel();
         
-        if (currentPlayer == null) {
-            return;
-        }
-        
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-        
-        if (currentRoom == null) {
-            setNoSceneInfo();
-            return;
-        }
-        
-        // Check if there's an active set in this room
-        Set currentSet = currentRoom.getSet();
-        
-        if (currentSet == null || !currentSet.isActive()) {
-            setNoSceneInfo();
-            return;
-        }
-        
-        // Get the scene card
-        RoleCard roleCard = currentSet.getRoleCard();
-        
-        if (roleCard == null) {
+        if (scene == null || !scene.isActive()) {
             setNoSceneInfo();
             return;
         }
         
         // Update scene information
-        sceneNameLabel.setText("Scene " + roleCard.getSceneID() + ": " + roleCard.getSceneName());
-        sceneBudgetLabel.setText("Budget: $" + roleCard.getSceneBudget());
-        sceneShotsLabel.setText("Shots remaining: " + currentSet.getShotCounter());
-        sceneDescriptionArea.setText(roleCard.getSceneDescription());
+        sceneNameLabel.setText("Scene " + scene.getSceneId() + ": " + scene.getSceneName());
+        sceneBudgetLabel.setText("Budget: $" + scene.getBudget());
+        sceneShotsLabel.setText("Shots remaining: " + scene.getShotsRemaining());
+        sceneDescriptionArea.setText(scene.getDescription());
         
         // Make sure all components are visible
         sceneNameLabel.setVisible(true);
@@ -121,5 +101,27 @@ public class SceneInfoPanel extends JPanel {
         sceneBudgetLabel.setText("Budget: $0");
         sceneShotsLabel.setText("Shots remaining: 0");
         sceneDescriptionArea.setText("Visit a set with an active scene to see details.");
+    }
+    
+    // GameObserver methods
+    @Override
+    public void onGameStateChanged() {
+        updateSceneInfo();
+    }
+    
+    @Override
+    public void onPlayerChanged(GameController.PlayerViewModel player) {
+        // Not directly relevant - maybe player moved to a new room
+        updateSceneInfo();
+    }
+    
+    @Override
+    public void onSceneChanged(SceneViewModel scene) {
+        updateSceneInfo();
+    }
+    
+    @Override
+    public void onBoardChanged() {
+        updateSceneInfo();
     }
 }

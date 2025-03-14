@@ -4,14 +4,18 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import deadwood.model.*;
-import deadwood.controller.GameBoard;
+import java.util.List;
 
+import deadwood.controller.GameController;
+import deadwood.controller.GameController.PlayerViewModel;
+import deadwood.controller.GameController.RoleViewModel;
 
-public class GameControlPanel extends JPanel {
-    private GameBoard gameBoard;
+/**
+ * Panel containing game control buttons.
+ * Refactored to use the MVC pattern with GameController.
+ */
+public class GameControlPanel extends JPanel implements GameController.GameObserver {
+    private GameController controller;
     private GameView parentView;
     private JButton actButton;
     private JButton rehearseButton;
@@ -21,9 +25,10 @@ public class GameControlPanel extends JPanel {
     private JButton viewSceneButton;
     private JButton helpButton;
     
-    public GameControlPanel(GameBoard gameBoard, GameView parentView) {
-        this.gameBoard = gameBoard;
+    public GameControlPanel(GameController controller, GameView parentView) {
+        this.controller = controller;
         this.parentView = parentView;
+        this.controller.registerObserver(this);
         
         // Set panel properties
         setBorder(BorderFactory.createTitledBorder(
@@ -33,7 +38,7 @@ public class GameControlPanel extends JPanel {
             TitledBorder.TOP));
         
         setLayout(new GridLayout(7, 1, 0, 5));
-        setPreferredSize(new Dimension(230, 250));
+        setPreferredSize(new Dimension(260, 250));
         
         // Initialize components
         initializeComponents();
@@ -47,15 +52,15 @@ public class GameControlPanel extends JPanel {
      */
     private void initializeComponents() {
         // Create action buttons
-        actButton = createButton("Act", "Act in your current role", e -> handleAct());
-        rehearseButton = createButton("Rehearse", "Rehearse for your current role", e -> handleRehearse());
-        moveButton = createButton("Move", "Move to another room", e -> handleMove());
-        takeRoleButton = createButton("Take Role", "Take a role on the current set", e -> handleTakeRole());
-        endTurnButton = createButton("End Turn", "End your turn", e -> handleEndTurn());
+        actButton = createButton("Act", e -> handleAct());
+        rehearseButton = createButton("Rehearse", e -> handleRehearse());
+        moveButton = createButton("Move", e -> handleMove());
+        takeRoleButton = createButton("Take Role", e -> handleTakeRole());
+        endTurnButton = createButton("End Turn", e -> handleEndTurn());
         
         // Create information buttons
-        viewSceneButton = createButton("View Scene", "View details about the current scene", e -> handleViewScene());
-        helpButton = createButton("Help", "Display game rules and information", e -> handleHelp());
+        viewSceneButton = createButton("View Scene", e -> handleViewScene());
+        helpButton = createButton("Help", e -> handleHelp());
         
         // Add buttons to panel
         add(actButton);
@@ -68,11 +73,10 @@ public class GameControlPanel extends JPanel {
     }
     
     /**
-     * Helper method to create a button with tooltip and action listener
+     * Helper method to create a button with action listener
      */
-    private JButton createButton(String text, String tooltip, java.awt.event.ActionListener listener) {
+    private JButton createButton(String text, java.awt.event.ActionListener listener) {
         JButton button = new JButton(text);
-        button.setToolTipText(tooltip);
         button.addActionListener(listener);
         
         // Try to load icon if available
@@ -92,14 +96,14 @@ public class GameControlPanel extends JPanel {
      * Updates button enabled states based on the current game state
      */
     public void updateButtonStates() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
-        if (currentPlayer == null) {
+        if (player == null) {
             return;
         }
         
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-        String currentRole = currentPlayer.getCurrentRole();
+        String currentRole = player.getCurrentRole();
+        String currentLocation = player.getCurrentLocation();
         
         // ACT - only enabled if player has a role
         actButton.setEnabled(currentRole != null);
@@ -111,22 +115,12 @@ public class GameControlPanel extends JPanel {
         moveButton.setEnabled(currentRole == null);
         
         // TAKE ROLE - enabled if there are available roles for this player
-        boolean canTakeRole = false;
-        if (currentRoom != null && currentRole == null) {
-            deadwood.model.Set currentSet = currentRoom.getSet();
-            if (currentSet != null && currentSet.isActive()) {
-                // Check if there are roles available for this player's rank
-                canTakeRole = hasAvailableRoles(currentPlayer, currentSet);
-            }
-        }
+        boolean canTakeRole = controller.canTakeRoles();
         takeRoleButton.setEnabled(canTakeRole);
         
         // VIEW SCENE - enabled if there's an active scene in the current room
-        boolean hasActiveScene = false;
-        if (currentRoom != null) {
-            deadwood.model.Set currentSet = currentRoom.getSet();
-            hasActiveScene = (currentSet != null && currentSet.isActive());
-        }
+        boolean hasActiveScene = controller.getCurrentSceneViewModel() != null && 
+                               controller.getCurrentSceneViewModel().isActive();
         viewSceneButton.setEnabled(hasActiveScene);
         
         // HELP - always enabled
@@ -137,44 +131,13 @@ public class GameControlPanel extends JPanel {
     }
     
     /**
-     * Checks if there are roles available for a player in a set
-     */
-    private boolean hasAvailableRoles(Actor player, deadwood.model.Set set) {
-        int playerRank = player.getCurrentRank();
-        
-        // Check starring roles
-        if (set.getRoleCard() != null) {
-            for (RoleCard.Role role : set.getRoleCard().getSceneRoles()) {
-                if (role.getLevel() <= playerRank && 
-                    !set.isRoleTaken(role.getName()) &&
-                    !set.hasRoleBeenActed(role.getName())) {
-                    return true;
-                }
-            }
-        }
-        
-        // Check extra roles
-        if (set.getExtraRolesCard() != null) {
-            for (RoleCard.Role role : set.getExtraRolesCard().getSceneRoles()) {
-                if (role.getLevel() <= playerRank && 
-                    !set.isRoleTaken(role.getName()) &&
-                    !set.hasRoleBeenActed(role.getName())) {
-                    return true;
-                }
-            }
-        }
-        
-        return false;
-    }
-    
-    /**
      * Handles the ACT button click
      */
     private void handleAct() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
         // Check if player has a role
-        if (currentPlayer.getCurrentRole() == null) {
+        if (player.getCurrentRole() == null) {
             JOptionPane.showMessageDialog(parentView, 
                 "You must have a role before you can act.",
                 "Cannot Act", 
@@ -183,22 +146,17 @@ public class GameControlPanel extends JPanel {
         }
         
         // Attempt to act in the current scene
-        boolean success = currentPlayer.inputAttemptScene(gameBoard);
+        boolean success = controller.act();
         
-        // Provide feedback based on result
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-        deadwood.model.Set currentSet = (currentRoom != null) ? currentRoom.getSet() : null;
-        
-        if (currentSet != null && !currentSet.isActive()) {
+        // Check if scene wrapped
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
+        if (scene == null || !scene.isActive()) {
             // Scene wrapped
             JOptionPane.showMessageDialog(parentView,
                 "The scene has wrapped! All shots completed.",
                 "Scene Wrapped",
                 JOptionPane.INFORMATION_MESSAGE);
         }
-        
-        // Update the UI
-        parentView.updateGameState();
         
         // End turn after acting
         handleEndTurn();
@@ -208,10 +166,10 @@ public class GameControlPanel extends JPanel {
      * Handles the REHEARSE button click
      */
     private void handleRehearse() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
         // Check if player has a role
-        if (currentPlayer.getCurrentRole() == null) {
+        if (player.getCurrentRole() == null) {
             JOptionPane.showMessageDialog(parentView, 
                 "You must have a role before you can rehearse.",
                 "Cannot Rehearse", 
@@ -220,22 +178,19 @@ public class GameControlPanel extends JPanel {
         }
         
         // Get rehearsal bonus before attempting
-        int oldBonus = currentPlayer.getPoints().getRehearsalBonus();
+        int oldBonus = player.getRehearsalBonus();
         
         // Attempt to rehearse
-        boolean success = currentPlayer.inputRehearse();
+        boolean success = controller.rehearse();
         
         if (success) {
             // Get new bonus
-            int newBonus = currentPlayer.getPoints().getRehearsalBonus();
+            int newBonus = controller.getCurrentPlayerViewModel().getRehearsalBonus();
             
             JOptionPane.showMessageDialog(parentView,
                 "Rehearsal successful! Your bonus increased from +" + oldBonus + " to +" + newBonus + ".",
                 "Rehearsal Successful",
                 JOptionPane.INFORMATION_MESSAGE);
-            
-            // Update the UI
-            parentView.updateGameState();
             
             // End turn after rehearsing
             handleEndTurn();
@@ -251,14 +206,7 @@ public class GameControlPanel extends JPanel {
      * Handles the MOVE button click
      */
     private void handleMove() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-        
-        if (currentRoom == null) {
-            return;
-        }
-        
-        java.util.List<String> adjacentRooms = currentRoom.getAdjacentRooms();
+        List<String> adjacentRooms = controller.getAdjacentRooms();
         
         if (adjacentRooms.isEmpty()) {
             JOptionPane.showMessageDialog(parentView, 
@@ -269,10 +217,7 @@ public class GameControlPanel extends JPanel {
         }
         
         // Create an array of formatted room names for the dropdown
-        String[] roomOptions = new String[adjacentRooms.size()];
-        for (int i = 0; i < adjacentRooms.size(); i++) {
-            roomOptions[i] = adjacentRooms.get(i);
-        }
+        String[] roomOptions = adjacentRooms.toArray(new String[0]);
         
         // Show dialog for selecting destination
         String destination = (String) JOptionPane.showInputDialog(
@@ -286,13 +231,9 @@ public class GameControlPanel extends JPanel {
         
         if (destination != null) {
             // Attempt to move to the selected room
-            boolean success = gameBoard.validatePlayerMove(currentRoom.getRoomID(), destination) &&
-                             currentPlayer.inputMove(destination, gameBoard);
+            boolean success = controller.movePlayer(destination);
             
             if (success) {
-                // Update the UI - No dialog displayed here anymore
-                parentView.updateGameState();
-                
                 // End turn after moving
                 handleEndTurn();
             } else {
@@ -308,18 +249,13 @@ public class GameControlPanel extends JPanel {
      * Handles the TAKE ROLE button click
      */
     private void handleTakeRole() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-        
-        if (currentRoom == null) {
-            return;
-        }
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         
         // Check if player already has a role
-        if (currentPlayer.getCurrentRole() != null) {
+        if (player.getCurrentRole() != null) {
             int response = JOptionPane.showConfirmDialog(
                 parentView, 
-                "You already have the role: " + currentPlayer.getCurrentRole() + 
+                "You already have the role: " + player.getCurrentRole() + 
                 "\nDo you want to abandon it and take a new role?",
                 "Abandon Current Role?",
                 JOptionPane.YES_NO_OPTION
@@ -328,52 +264,10 @@ public class GameControlPanel extends JPanel {
             if (response != JOptionPane.YES_OPTION) {
                 return;
             }
-            
-            // Abandon current role
-            currentPlayer.abandonRole();
         }
         
-        // Get current set
-        deadwood.model.Set currentSet = currentRoom.getSet();
-        if (currentSet == null || !currentSet.isActive()) {
-            JOptionPane.showMessageDialog(parentView, 
-                "No active set in this room.",
-                "Cannot Take Role", 
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        // Get available roles for the player's rank
-        java.util.List<String> availableRoles = new ArrayList<>();
-        Map<String, String> roleDescriptions = new HashMap<>();
-        
-        // Check starring roles
-        if (currentSet.getRoleCard() != null) {
-            for (RoleCard.Role role : currentSet.getRoleCard().getSceneRoles()) {
-                if (role.getLevel() <= currentPlayer.getCurrentRank() && 
-                    !currentSet.isRoleTaken(role.getName()) &&
-                    !currentSet.hasRoleBeenActed(role.getName())) {
-                    
-                    availableRoles.add(role.getName());
-                    roleDescriptions.put(role.getName(), 
-                        role.getName() + " (Rank " + role.getLevel() + ", Starring) - \"" + role.getLine() + "\"");
-                }
-            }
-        }
-        
-        // Check extra roles
-        if (currentSet.getExtraRolesCard() != null) {
-            for (RoleCard.Role role : currentSet.getExtraRolesCard().getSceneRoles()) {
-                if (role.getLevel() <= currentPlayer.getCurrentRank() && 
-                    !currentSet.isRoleTaken(role.getName()) &&
-                    !currentSet.hasRoleBeenActed(role.getName())) {
-                    
-                    availableRoles.add(role.getName());
-                    roleDescriptions.put(role.getName(), 
-                        role.getName() + " (Rank " + role.getLevel() + ", Extra) - \"" + role.getLine() + "\"");
-                }
-            }
-        }
+        // Get available roles
+        List<RoleViewModel> availableRoles = controller.getAvailableRoles();
         
         // If no roles available
         if (availableRoles.isEmpty()) {
@@ -387,7 +281,11 @@ public class GameControlPanel extends JPanel {
         // Create an array of role descriptions for the dropdown
         String[] roleOptions = new String[availableRoles.size()];
         for (int i = 0; i < availableRoles.size(); i++) {
-            roleOptions[i] = roleDescriptions.get(availableRoles.get(i));
+            RoleViewModel role = availableRoles.get(i);
+            String type = controller.getCurrentSceneViewModel().getStarringRoles().stream()
+                .anyMatch(r -> r.getName().equals(role.getName())) ? "Starring" : "Extra";
+            
+            roleOptions[i] = role.getName() + " (Rank " + role.getRank() + ", " + type + ") - \"" + role.getLine() + "\"";
         }
         
         // Show role selection dialog
@@ -406,12 +304,9 @@ public class GameControlPanel extends JPanel {
             // Extract the role name from the description
             String selectedRole = selectedDescription.substring(0, selectedDescription.indexOf(" ("));
             
-            boolean success = currentPlayer.inputRole(selectedRole);
+            boolean success = controller.takeRole(selectedRole);
             
             if (success) {
-                // Update UI - No dialog displayed here anymore
-                parentView.updateGameState();
-                
                 // End turn after taking a role
                 handleEndTurn();
             }
@@ -422,15 +317,9 @@ public class GameControlPanel extends JPanel {
      * Handles the VIEW SCENE button click
      */
     private void handleViewScene() {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
-        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
         
-        if (currentRoom == null) {
-            return;
-        }
-        
-        deadwood.model.Set currentSet = currentRoom.getSet();
-        if (currentSet == null || !currentSet.isActive()) {
+        if (scene == null || !scene.isActive()) {
             JOptionPane.showMessageDialog(parentView, 
                 "No active scene in this location.", 
                 "No Scene Available", 
@@ -438,54 +327,43 @@ public class GameControlPanel extends JPanel {
             return;
         }
         
-        // Get the scene information
-        RoleCard roleCard = currentSet.getRoleCard();
-        if (roleCard == null) {
-            JOptionPane.showMessageDialog(parentView, 
-                "Scene information is not available.", 
-                "Scene Information", 
-                JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        
         // Create detailed scene information
         StringBuilder sceneInfo = new StringBuilder();
-        sceneInfo.append("Scene ").append(roleCard.getSceneID()).append(": ")
-            .append(roleCard.getSceneName()).append("\n\n");
-        sceneInfo.append("Budget: $").append(roleCard.getSceneBudget()).append("\n");
-        sceneInfo.append("Shots Remaining: ").append(currentSet.getShotCounter()).append("\n\n");
-        sceneInfo.append("Description: ").append(roleCard.getSceneDescription()).append("\n\n");
+        sceneInfo.append("Scene ").append(scene.getSceneId()).append(": ")
+            .append(scene.getSceneName()).append("\n\n");
+        sceneInfo.append("Budget: $").append(scene.getBudget()).append("\n");
+        sceneInfo.append("Shots Remaining: ").append(scene.getShotsRemaining()).append("\n\n");
+        sceneInfo.append("Description: ").append(scene.getDescription()).append("\n\n");
         
         // Add starring roles
         sceneInfo.append("Starring Roles:\n");
-        for (RoleCard.Role role : roleCard.getSceneRoles()) {
+        for (RoleViewModel role : scene.getStarringRoles()) {
             String status = "";
-            if (currentSet.isRoleTaken(role.getName())) {
+            if (role.isTaken()) {
                 status = " [TAKEN]";
-            } else if (role.getLevel() > currentPlayer.getCurrentRank()) {
+            } else if (role.getRank() > controller.getCurrentPlayerViewModel().getRank()) {
                 status = " [RANK TOO LOW]";
             }
             
             sceneInfo.append("  - ").append(role.getName())
-                .append(" (Rank ").append(role.getLevel()).append(")")
+                .append(" (Rank ").append(role.getRank()).append(")")
                 .append(status).append("\n");
             sceneInfo.append("    Line: \"").append(role.getLine()).append("\"\n");
         }
         
         // Add extra roles if available
-        RoleCard extraRolesCard = currentSet.getExtraRolesCard();
-        if (extraRolesCard != null && !extraRolesCard.getSceneRoles().isEmpty()) {
+        if (!scene.getExtraRoles().isEmpty()) {
             sceneInfo.append("\nExtra Roles:\n");
-            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+            for (RoleViewModel role : scene.getExtraRoles()) {
                 String status = "";
-                if (currentSet.isRoleTaken(role.getName())) {
+                if (role.isTaken()) {
                     status = " [TAKEN]";
-                } else if (role.getLevel() > currentPlayer.getCurrentRank()) {
+                } else if (role.getRank() > controller.getCurrentPlayerViewModel().getRank()) {
                     status = " [RANK TOO LOW]";
                 }
                 
                 sceneInfo.append("  - ").append(role.getName())
-                    .append(" (Rank ").append(role.getLevel()).append(")")
+                    .append(" (Rank ").append(role.getRank()).append(")")
                     .append(status).append("\n");
                 sceneInfo.append("    Line: \"").append(role.getLine()).append("\"\n");
             }
@@ -568,9 +446,27 @@ public class GameControlPanel extends JPanel {
      */
     public void handleEndTurn() {
         // End the current player's turn
-        gameBoard.endTurn();
-        
-        // Update the UI
-        parentView.updateGameState();
+        controller.endTurn();
+    }
+    
+    // GameObserver methods
+    @Override
+    public void onGameStateChanged() {
+        updateButtonStates();
+    }
+    
+    @Override
+    public void onPlayerChanged(PlayerViewModel player) {
+        updateButtonStates();
+    }
+    
+    @Override
+    public void onSceneChanged(GameController.SceneViewModel scene) {
+        updateButtonStates();
+    }
+    
+    @Override
+    public void onBoardChanged() {
+        updateButtonStates();
     }
 }
