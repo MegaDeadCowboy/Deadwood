@@ -7,6 +7,10 @@ import javax.swing.border.*;
 import deadwood.controller.GameController;
 import deadwood.controller.GameController.PlayerViewModel;
 
+/**
+ * Panel for displaying current player information.
+ * Uses MVC pattern with GameController providing data through PlayerViewModel.
+ */
 public class PlayerInfoPanel extends JPanel implements GameController.GameObserver {
 
     private GameController controller;
@@ -66,6 +70,10 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
         add(Box.createVerticalStrut(5));
     }
     
+    /**
+     * Updates the player information display using the PlayerViewModel
+     * from the controller
+     */
     public void updatePlayerInfo() {
         // Get current player information from the controller
         PlayerViewModel player = controller.getCurrentPlayerViewModel();
@@ -84,22 +92,26 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
                                              player.getRank()));
         
         // Update role information
+        updateRoleDisplay(player);
+    }
+    
+    /**
+     * Updates the role display with information from PlayerViewModel
+     */
+    private void updateRoleDisplay(PlayerViewModel player) {
         String playerRole = player.getCurrentRole();
         
         if (playerRole != null) {
-            String roleDescription = playerRole;
+            // Format the role description
+            StringBuilder roleDescription = new StringBuilder(playerRole);
             
             // Add role rank if available
             if (player.getRoleRank() > 0) {
-                roleDescription += " (Rank " + player.getRoleRank() + ")";
+                roleDescription.append(" (Rank ").append(player.getRoleRank()).append(")");
             }
             
-            // Add role type if available
-            if (player.isRoleExtra()) {
-                roleDescription += " [Extra]";
-            } else {
-                roleDescription += " [Starring]";
-            }
+            // Add role type
+            roleDescription.append(player.isRoleExtra() ? " [Extra]" : " [Starring]");
             
             // Format role and line information
             String roleLine = player.getRoleLine() != null ? player.getRoleLine() : "";

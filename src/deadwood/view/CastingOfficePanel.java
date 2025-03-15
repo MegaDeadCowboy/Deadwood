@@ -124,8 +124,6 @@ public class CastingOfficePanel extends JPanel implements GameController.GameObs
      * Handles upgrade button click
      */
     private void handleUpgrade(String paymentType) {
-        PlayerViewModel player = controller.getCurrentPlayerViewModel();
-        
         // Get selected rank
         int selectedRow = upgradeTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -138,18 +136,8 @@ public class CastingOfficePanel extends JPanel implements GameController.GameObs
         
         // Calculate target rank (row index + 2)
         int targetRank = selectedRow + 2;
-        int currentRank = player.getRank();
         
-        // Can't downgrade or stay at same rank
-        if (targetRank <= currentRank) {
-            JOptionPane.showMessageDialog(parentView, 
-                "You can only upgrade to a higher rank than your current rank (" + currentRank + ").", 
-                "Invalid Upgrade", 
-                JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-        
-        // Attempt to upgrade
+        // Attempt to upgrade using the controller
         boolean success = controller.upgradeRank(targetRank, paymentType);
         
         if (success) {
@@ -161,19 +149,30 @@ public class CastingOfficePanel extends JPanel implements GameController.GameObs
             // End turn after successful upgrade
             controller.endTurn();
         } else {
-            // Calculate required amount
-            String costType = paymentType.equals("cash") ? "dollars" : "credits";
-            String costCell = paymentType.equals("cash") ? 
-                              (String)upgradeTable.getValueAt(selectedRow, 1) : 
-                              (String)upgradeTable.getValueAt(selectedRow, 2);
+            PlayerViewModel player = controller.getCurrentPlayerViewModel();
+            int currentRank = player.getRank();
             
-            // Strip non-numeric characters
-            String costValue = costCell.replaceAll("[^0-9]", "");
-            
-            JOptionPane.showMessageDialog(parentView, 
-                "Upgrade failed! You need " + costValue + " " + costType + " for this upgrade.", 
-                "Insufficient Funds", 
-                JOptionPane.ERROR_MESSAGE);
+            // Provide appropriate error message based on the type of failure
+            if (targetRank <= currentRank) {
+                JOptionPane.showMessageDialog(parentView, 
+                    "You can only upgrade to a higher rank than your current rank (" + currentRank + ").", 
+                    "Invalid Upgrade", 
+                    JOptionPane.WARNING_MESSAGE);
+            } else {
+                // Assume it's due to insufficient funds
+                String costType = paymentType.equals("cash") ? "dollars" : "credits";
+                String costCell = paymentType.equals("cash") ? 
+                                  (String)upgradeTable.getValueAt(selectedRow, 1) : 
+                                  (String)upgradeTable.getValueAt(selectedRow, 2);
+                
+                // Strip non-numeric characters
+                String costValue = costCell.replaceAll("[^0-9]", "");
+                
+                JOptionPane.showMessageDialog(parentView, 
+                    "Upgrade failed! You need " + costValue + " " + costType + " for this upgrade.", 
+                    "Insufficient Funds", 
+                    JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

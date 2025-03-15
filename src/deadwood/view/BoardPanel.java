@@ -187,24 +187,44 @@ public class BoardPanel extends JPanel implements GameController.GameObserver {
         String diceImagePath = "resources/images/dice/" + tokenVM.getDiceColor() + "1.png";
         ImageIcon diceIcon = new ImageIcon(diceImagePath);
         
+        // Debug output to check if image is loading
+        if (diceIcon.getIconWidth() <= 0) {
+            System.out.println("Warning: Failed to load dice image: " + diceImagePath);
+            // Create a colored square as a fallback
+            JLabel fallbackToken = new JLabel();
+            fallbackToken.setPreferredSize(new Dimension(30, 30));
+            fallbackToken.setOpaque(true);
+            fallbackToken.setBackground(Color.RED); // Use a bright color to make it visible
+            fallbackToken.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            fallbackToken.setText(String.valueOf(tokenVM.getPlayerId()));
+            fallbackToken.setHorizontalAlignment(JLabel.CENTER);
+            fallbackToken.setVisible(true);
+            
+            // Add to panel
+            add(fallbackToken);
+            setComponentZOrder(fallbackToken, 0); // Make sure it's on top
+            return fallbackToken;
+        }
+        
         // Scale the dice image
         Image diceImage = diceIcon.getImage();
-        int diceWidth = (int)(diceIcon.getIconWidth() * scaleFactor);
-        int diceHeight = (int)(diceIcon.getIconHeight() * scaleFactor);
+        int diceWidth = Math.max(20, (int)(diceIcon.getIconWidth() * scaleFactor));
+        int diceHeight = Math.max(20, (int)(diceIcon.getIconHeight() * scaleFactor));
         Image scaledDice = diceImage.getScaledInstance(diceWidth, diceHeight, Image.SCALE_SMOOTH);
         diceIcon = new ImageIcon(scaledDice);
         
         // Create the player token label
         JLabel playerToken = new JLabel(diceIcon);
         playerToken.setVisible(true);
+        playerToken.setBounds(0, 0, diceWidth, diceHeight); // Set explicit size
         
         // Add to panel
         add(playerToken);
-        setComponentZOrder(playerToken, 0);
+        setComponentZOrder(playerToken, 0); // Make sure it's on top
         
         return playerToken;
     }
-    
+
     /**
      * Updates a player token's position
      */
@@ -217,6 +237,7 @@ public class BoardPanel extends JPanel implements GameController.GameObserver {
         // Get the scaled position for the room from the PlayerLocation model
         Point roomPos = PlayerLocation.getScaledRoomPosition(tokenVM.getRoomId(), scaleFactor);
         if (roomPos == null) {
+            System.out.println("Warning: No position found for room: " + tokenVM.getRoomId());
             tokenLabel.setVisible(false);
             return;
         }
@@ -226,8 +247,15 @@ public class BoardPanel extends JPanel implements GameController.GameObserver {
         int offsetX = (int)(((playerID - 1) % 3) * 20 * scaleFactor);
         int offsetY = (int)(((playerID - 1) / 3) * 20 * scaleFactor);
         
-        // Update token position
-        tokenLabel.setLocation(roomPos.x + offsetX, roomPos.y + offsetY);
+        // Debug output
+        System.out.println("Positioning player " + playerID + " at: " + 
+                        (roomPos.x + offsetX) + "," + (roomPos.y + offsetY) + 
+                        " (Room: " + tokenVM.getRoomId() + ")");
+        
+        // Update token position with explicit size
+        int tokenWidth = tokenLabel.getWidth();
+        int tokenHeight = tokenLabel.getHeight();
+        tokenLabel.setBounds(roomPos.x + offsetX, roomPos.y + offsetY, tokenWidth, tokenHeight);
         tokenLabel.setVisible(true);
     }
     

@@ -9,7 +9,7 @@ import deadwood.controller.GameController;
  * Main container class for the Deadwood GUI.
  * Refactored to use the MVC pattern with GameController.
  */
-public class GameView extends JFrame {
+public class GameView extends JFrame implements GameController.GameObserver {
 
     private GameController controller;
     private BoardPanel boardPanel;
@@ -28,6 +28,9 @@ public class GameView extends JFrame {
         
         // Initialize controller
         this.controller = new GameController(numPlayers);
+        
+        // Register as observer
+        this.controller.registerObserver(this);
         
         // Setup frame properties
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -115,13 +118,38 @@ public class GameView extends JFrame {
     }
     
     /**
-     * Updates all components to reflect current game state
-     * This is now handled by the observer pattern
+     * Updates the frame title with current game information
      */
-    public void updateGameState() {
-        // No longer needed as each component observes the controller directly
+    private void updateFrameTitle() {
+        GameController.PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        if (player != null) {
+            setTitle("Deadwood - Player " + player.getPlayerId() + "'s Turn - Rank " + player.getRank());
+        }
+    }
+    
+    /**
+     * GameObserver methods implementation
+     */
+    @Override
+    public void onGameStateChanged() {
+        updateFrameTitle();
         revalidate();
         repaint();
+    }
+    
+    @Override
+    public void onPlayerChanged(GameController.PlayerViewModel player) {
+        updateFrameTitle();
+    }
+    
+    @Override
+    public void onSceneChanged(GameController.SceneViewModel scene) {
+        // Not directly relevant for main frame, individual panels will handle this
+    }
+    
+    @Override
+    public void onBoardChanged() {
+        // Not directly relevant for main frame, BoardPanel will handle this
     }
     
     /**
