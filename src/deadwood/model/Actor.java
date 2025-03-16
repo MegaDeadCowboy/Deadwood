@@ -179,8 +179,13 @@ public class Actor {
         Room currentRoom = location.getCurrentRoom();
         Set currentSet = currentRoom.getSet();
         
-        if (currentSet == null || !currentSet.isActive()) {
-            System.out.println("No active set in this room.");
+        if (currentSet == null) {
+            System.out.println("No set in this room.");
+            return false;
+        }
+        
+        if (!currentSet.isActive()) {
+            System.out.println("The scene in this room has wrapped. No acting can be done.");
             return false;
         }
         
@@ -302,8 +307,13 @@ public class Actor {
         Room currentRoom = location.getCurrentRoom();
         Set currentSet = currentRoom.getSet();
         
-        if (currentSet == null || !currentSet.isActive()) {
-            System.out.println("No active set in this room.");
+        if (currentSet == null) {
+            System.out.println("No set in this room.");
+            return false;
+        }
+        
+        if (!currentSet.isActive()) {
+            System.out.println("The scene in this room has wrapped. No rehearsal can be done.");
             return false;
         }
         
@@ -320,6 +330,7 @@ public class Actor {
         
         if (currentBonus >= budget - 1) {
             System.out.println("You already have the maximum rehearsal bonus for this scene (+" + currentBonus + ").");
+            System.out.println("Your bonus is sufficient - time to act instead!");
             return false;
         }
         
@@ -330,13 +341,11 @@ public class Actor {
             System.out.println("Rehearsal successful. Current bonus: +" + points.getRehearsalBonus());
             return true;
         } 
-        
         else {
-            System.out.println("You've reached the maximum rehearsal bonus.");
+            System.out.println("You've reached the maximum rehearsal bonus. No more rehearsal is possible.");
             return false;
         }
     }
-
   
 
     public boolean inputUpgrade(int targetRank, String paymentType) {
@@ -377,7 +386,6 @@ public class Actor {
         
         // Check if player can afford the upgrade
         if (office.validateUpgrade(currentRank, targetRank, paymentType, points)) {
-
             // Process the payment and upgrade
             office.checkOut(currentRank, points, targetRank, paymentType);
             
@@ -387,10 +395,61 @@ public class Actor {
             System.out.println("Successfully upgraded to rank " + targetRank + "!");
             
             return true;
-        }
-
-        else {
-            System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
+        } else {
+            // Get the appropriate price for better error messages
+            int price = -1;
+            if (targetRank >= 2 && targetRank <= 6) {
+                int index = targetRank - 2;
+                if (paymentType.equals("cash")) {
+                    // Access office's upgradePriceCash if possible
+                    try {
+                        java.lang.reflect.Field field = CastingOffice.class.getDeclaredField("upgradePriceCash");
+                        field.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        List<Integer> prices = (List<Integer>) field.get(office);
+                        if (index < prices.size()) {
+                            price = prices.get(index);
+                        }
+                    } catch (Exception e) {
+                        // If we can't access the field, use estimated prices
+                        int[] estimatedPrices = {4, 10, 18, 28, 40};
+                        if (index < estimatedPrices.length) {
+                            price = estimatedPrices[index];
+                        }
+                    }
+                } else {
+                    // Access office's upgradePriceCredit if possible
+                    try {
+                        java.lang.reflect.Field field = CastingOffice.class.getDeclaredField("upgradePriceCredit");
+                        field.setAccessible(true);
+                        @SuppressWarnings("unchecked")
+                        List<Integer> prices = (List<Integer>) field.get(office);
+                        if (index < prices.size()) {
+                            price = prices.get(index);
+                        }
+                    } catch (Exception e) {
+                        // If we can't access the field, use estimated prices
+                        int[] estimatedPrices = {5, 10, 15, 20, 25};
+                        if (index < estimatedPrices.length) {
+                            price = estimatedPrices[index];
+                        }
+                    }
+                }
+            }
+            
+            // Provide more specific error message
+            if (price > 0) {
+                if (paymentType.equals("cash")) {
+                    System.out.println("Cannot upgrade - insufficient funds. Rank " + targetRank + " costs $" + price + 
+                                       ", but you only have $" + points.getPlayerCash() + ".");
+                } else {
+                    System.out.println("Cannot upgrade - insufficient credits. Rank " + targetRank + " costs " + price + 
+                                       " credits, but you only have " + points.getPlayerCredit() + " credits.");
+                }
+            } else {
+                System.out.println("Cannot upgrade - insufficient funds or invalid rank.");
+            }
+            
             return false;
         }
     }

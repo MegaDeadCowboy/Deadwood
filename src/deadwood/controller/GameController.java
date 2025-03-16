@@ -535,22 +535,26 @@ public static class ShotCounterViewModel {
         
         // Check if player has a role
         if (currentPlayer.getCurrentRole() == null) {
+            System.out.println("You don't have a role to act in.");
             return false;
         }
         
+        // Try to act and capture result
         boolean success = currentPlayer.inputAttemptScene(gameBoard);
         
+        // Always notify observers, regardless of success/failure
         notifyObservers();
         notifyPlayerChanged(getCurrentPlayerViewModel());
         notifySceneChanged(getCurrentSceneViewModel());
         notifyBoardChanged();
         
+        // Return success status without ending turn on failure
         return success;
     }
-    
+        
     /**
-     * Have the current player rehearse for their role
-     */
+ * Have the current player rehearse for their role
+    */
     public boolean rehearse() {
         Actor currentPlayer = gameBoard.getCurrentPlayer();
         if (currentPlayer == null) {
@@ -559,16 +563,18 @@ public static class ShotCounterViewModel {
         
         // Check if player has a role
         if (currentPlayer.getCurrentRole() == null) {
+            System.out.println("You don't have a role to rehearse for.");
             return false;
         }
         
+        // Try to rehearse and capture the result
         boolean success = currentPlayer.inputRehearse();
         
-        if (success) {
-            notifyObservers();
-            notifyPlayerChanged(getCurrentPlayerViewModel());
-        }
+        // Always notify observers of any state changes, regardless of success/failure
+        notifyObservers();
+        notifyPlayerChanged(getCurrentPlayerViewModel());
         
+        // Return success status without ending turn on failure
         return success;
     }
     
@@ -584,16 +590,24 @@ public static class ShotCounterViewModel {
         // Check if in casting office
         Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
         if (!(currentRoom instanceof CastingOffice)) {
+            System.out.println("You must be in the Casting Office to upgrade.");
             return false;
         }
         
-        boolean success = currentPlayer.inputUpgrade(targetRank, paymentType);
-        
-        if (success) {
-            notifyObservers();
-            notifyPlayerChanged(getCurrentPlayerViewModel());
+        // Validate payment type before calling actor method
+        if (paymentType == null || (!paymentType.equalsIgnoreCase("cash") && !paymentType.equalsIgnoreCase("credit"))) {
+            System.out.println("Invalid payment type. Use 'cash' or 'credit'.");
+            return false;
         }
         
+        // Try to upgrade and capture the result
+        boolean success = currentPlayer.inputUpgrade(targetRank, paymentType);
+        
+        // Always notify observers of any state changes, regardless of success/failure
+        notifyObservers();
+        notifyPlayerChanged(getCurrentPlayerViewModel());
+        
+        // Return success status without ending turn on failure
         return success;
     }
     
