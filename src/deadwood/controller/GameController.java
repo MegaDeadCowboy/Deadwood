@@ -499,30 +499,49 @@ public static class ShotCounterViewModel {
         return success;
     }
     
-    /**
-     * Have the current player take a role
-     */
-    public boolean takeRole(String roleName) {
-        Actor currentPlayer = gameBoard.getCurrentPlayer();
-        if (currentPlayer == null) {
-            return false;
-        }
-        
-        // If player has a role, abandon it first
-        if (currentPlayer.getCurrentRole() != null) {
-            currentPlayer.abandonRole();
-        }
-        
-        boolean success = currentPlayer.inputRole(roleName);
-        
-        if (success) {
-            notifyObservers();
-            notifyPlayerChanged(getCurrentPlayerViewModel());
-            notifySceneChanged(getCurrentSceneViewModel());
-        }
-        
-        return success;
+   /**
+ * Have the current player take a role
+ */
+public boolean takeRole(String roleName) {
+    Actor currentPlayer = gameBoard.getCurrentPlayer();
+    if (currentPlayer == null) {
+        return false;
     }
+    
+    // Get the current room and set
+    Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+    if (currentRoom == null) {
+        System.out.println("Error: Player is not in a valid room.");
+        return false;
+    }
+    
+    Set currentSet = currentRoom.getSet();
+    if (currentSet == null || !currentSet.isActive()) {
+        System.out.println("There is no active set in this room.");
+        return false;
+    }
+    
+    // Check if this role has already been acted
+    if (currentSet.hasRoleBeenActed(roleName)) {
+        System.out.println("This role has already been completed and cannot be taken.");
+        return false;
+    }
+    
+    // If player has a role, abandon it first
+    if (currentPlayer.getCurrentRole() != null) {
+        currentPlayer.abandonRole();
+    }
+    
+    boolean success = currentPlayer.inputRole(roleName);
+    
+    if (success) {
+        notifyObservers();
+        notifyPlayerChanged(getCurrentPlayerViewModel());
+        notifySceneChanged(getCurrentSceneViewModel());
+    }
+    
+    return success;
+}
     
     /**
      * Have the current player act in their role

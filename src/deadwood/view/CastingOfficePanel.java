@@ -137,6 +137,50 @@ public class CastingOfficePanel extends JPanel implements GameController.GameObs
         // Calculate target rank (row index + 2)
         int targetRank = selectedRow + 2;
         
+        // Get player's current rank
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        int currentRank = player.getRank();
+        
+        // Check if trying to downgrade
+        if (targetRank <= currentRank) {
+            JOptionPane.showMessageDialog(parentView, 
+                "You can only upgrade to a higher rank than your current rank (" + currentRank + ").", 
+                "Invalid Upgrade", 
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Get cost information for showing error messages if needed
+        String costCell = paymentType.equals("cash") ? 
+                            (String)upgradeTable.getValueAt(selectedRow, 1) : 
+                            (String)upgradeTable.getValueAt(selectedRow, 2);
+        
+        // Strip non-numeric characters
+        String costValue = costCell.replaceAll("[^0-9]", "");
+        int cost = Integer.parseInt(costValue);
+        
+        // Check if player can afford it before attempting upgrade
+        boolean canAfford = false;
+        if (paymentType.equals("cash")) {
+            canAfford = player.getCash() >= cost;
+        } else {
+            canAfford = player.getCredits() >= cost;
+        }
+        
+        if (!canAfford) {
+            String costType = paymentType.equals("cash") ? "dollars" : "credits";
+            String playerHas = paymentType.equals("cash") ? 
+                                String.valueOf(player.getCash()) : 
+                                String.valueOf(player.getCredits());
+            
+            JOptionPane.showMessageDialog(parentView, 
+                "Insufficient funds! You need " + costValue + " " + costType + 
+                " but only have " + playerHas + ".", 
+                "Cannot Afford Upgrade", 
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         // Attempt to upgrade using the controller
         boolean success = controller.upgradeRank(targetRank, paymentType);
         
@@ -149,30 +193,12 @@ public class CastingOfficePanel extends JPanel implements GameController.GameObs
             // End turn after successful upgrade
             controller.endTurn();
         } else {
-            PlayerViewModel player = controller.getCurrentPlayerViewModel();
-            int currentRank = player.getRank();
-            
-            // Provide appropriate error message based on the type of failure
-            if (targetRank <= currentRank) {
-                JOptionPane.showMessageDialog(parentView, 
-                    "You can only upgrade to a higher rank than your current rank (" + currentRank + ").", 
-                    "Invalid Upgrade", 
-                    JOptionPane.WARNING_MESSAGE);
-            } else {
-                // Assume it's due to insufficient funds
-                String costType = paymentType.equals("cash") ? "dollars" : "credits";
-                String costCell = paymentType.equals("cash") ? 
-                                  (String)upgradeTable.getValueAt(selectedRow, 1) : 
-                                  (String)upgradeTable.getValueAt(selectedRow, 2);
-                
-                // Strip non-numeric characters
-                String costValue = costCell.replaceAll("[^0-9]", "");
-                
-                JOptionPane.showMessageDialog(parentView, 
-                    "Upgrade failed! You need " + costValue + " " + costType + " for this upgrade.", 
-                    "Insufficient Funds", 
-                    JOptionPane.ERROR_MESSAGE);
-            }
+            // This should rarely happen as we did validation above, but handle just in case
+            JOptionPane.showMessageDialog(parentView, 
+                "Upgrade failed for an unknown reason. Please try again.", 
+                "Upgrade Failed", 
+                JOptionPane.ERROR_MESSAGE);
+            // Do not end turn on failed upgrade
         }
     }
 

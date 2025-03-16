@@ -105,7 +105,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         String currentRole = player.getCurrentRole();
         String currentLocation = player.getCurrentLocation();
         
-        // ACT - only enabled if player has a role
+        // ACT - only enabled if player has a role and the role hasn't been completed
         actButton.setEnabled(currentRole != null);
         
         // REHEARSE - only enabled if player has a role
@@ -145,21 +145,80 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
             return;
         }
         
+        // Check if the scene has been wrapped
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
+        if (scene == null || !scene.isActive()) {
+            JOptionPane.showMessageDialog(parentView,
+                "The scene has wrapped! Cannot act in this scene.",
+                "Scene Wrapped",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Check if this role has already been successfully acted
+        // This requires examining the scene's roles
+        String currentRole = player.getCurrentRole();
+        boolean isRoleActed = false;
+        
+        // Check starring roles
+        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(currentRole) && role.isActed()) {
+                isRoleActed = true;
+                break;
+            }
+        }
+        
+        // Check extra roles if not found in starring roles
+        if (!isRoleActed) {
+            for (GameController.RoleViewModel role : scene.getExtraRoles()) {
+                if (role.getName().equals(currentRole) && role.isActed()) {
+                    isRoleActed = true;
+                    break;
+                }
+            }
+        }
+        
+        if (isRoleActed) {
+            JOptionPane.showMessageDialog(parentView,
+                "You've already successfully completed this role! You cannot act in it again.\n" +
+                "You may take a different role in this scene, move to another room, or end your turn.",
+                "Role Completed",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
         // Attempt to act in the current scene
         boolean success = controller.act();
         
-        // Check if scene wrapped
-        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
-        if (scene == null || !scene.isActive()) {
-            // Scene wrapped
+        if (success) {
+            // Check if scene wrapped after the action
+            scene = controller.getCurrentSceneViewModel();
+            if (scene == null || !scene.isActive()) {
+                // Scene wrapped
+                JOptionPane.showMessageDialog(parentView,
+                    "The scene has wrapped! All shots completed.",
+                    "Scene Wrapped",
+                    JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(parentView,
+                    "Acting success! You've successfully completed this role.\n" +
+                    "You may take a different role in this scene on your next turn.",
+                    "Acting Success",
+                    JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            // End turn after successful acting
+            handleEndTurn();
+        } else {
             JOptionPane.showMessageDialog(parentView,
-                "The scene has wrapped! All shots completed.",
-                "Scene Wrapped",
+                "Acting attempt failed. You may try again on your next turn\n" +
+                "or consider rehearsing to improve your chances.",
+                "Acting Failed",
                 JOptionPane.INFORMATION_MESSAGE);
+            
+            // End turn after failed acting
+            handleEndTurn();
         }
-        
-        // End turn after acting
-        handleEndTurn();
     }
     
     /**
@@ -180,6 +239,72 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         // Get rehearsal bonus before attempting
         int oldBonus = player.getRehearsalBonus();
         
+        // Check if the scene has been wrapped
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
+        if (scene == null || !scene.isActive()) {
+            JOptionPane.showMessageDialog(parentView,
+                "The scene has wrapped! Cannot rehearse for this scene.",
+                "Scene Wrapped",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Check if this role has already been successfully acted
+        String currentRole = player.getCurrentRole();
+        boolean isRoleActed = false;
+        
+        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(currentRole) && role.isActed()) {
+                isRoleActed = true;
+                break;
+            }
+        }
+        
+        if (!isRoleActed) {
+            for (GameController.RoleViewModel role : scene.getExtraRoles()) {
+                if (role.getName().equals(currentRole) && role.isActed()) {
+                    isRoleActed = true;
+                    break;
+                }
+            }
+        }
+        
+        if (isRoleActed) {
+            JOptionPane.showMessageDialog(parentView,
+                "You've already completed this role successfully. No need to rehearse.",
+                "Role Completed",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        // Calculate max possible rehearsal bonus based on budget
+        int budget = 0;
+        boolean isExtraRole = true;
+        
+        // Determine the appropriate budget and role type
+        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(currentRole)) {
+                budget = scene.getBudget();
+                isExtraRole = false;
+                break;
+            }
+        }
+        
+        if (isExtraRole) {
+            // Set a default budget for extra roles
+            budget = 3; // This is a simplification - ideally we'd get the actual extra role budget
+        }
+        
+        // Check if already at maximum rehearsal bonus
+        if (oldBonus >= budget - 1) {
+            JOptionPane.showMessageDialog(parentView,
+                "You already have the maximum rehearsal bonus (+" + oldBonus + ") for this scene.\n" +
+                "You should try acting now!",
+                "Maximum Bonus Reached",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
         // Attempt to rehearse
         boolean success = controller.rehearse();
         
@@ -192,13 +317,15 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
                 "Rehearsal Successful",
                 JOptionPane.INFORMATION_MESSAGE);
             
-            // End turn after rehearsing
+            // End turn after successful rehearsing
             handleEndTurn();
         } else {
             JOptionPane.showMessageDialog(parentView,
-                "You've already reached the maximum rehearsal bonus for this role.",
+                "Unable to rehearse. This may be because you've reached the maximum bonus\n" +
+                "or the scene has been completed.",
                 "Cannot Rehearse",
                 JOptionPane.WARNING_MESSAGE);
+            // Do not end turn on failed rehearsal
         }
     }
     
@@ -234,13 +361,19 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
             boolean success = controller.movePlayer(destination);
             
             if (success) {
-                // End turn after moving
+                JOptionPane.showMessageDialog(parentView,
+                    "Successfully moved to " + destination + ".",
+                    "Move Successful",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // End turn after successful moving
                 handleEndTurn();
             } else {
                 JOptionPane.showMessageDialog(parentView,
                     "Failed to move to " + destination + ".",
                     "Move Failed",
                     JOptionPane.ERROR_MESSAGE);
+                // Do not end turn on failed move
             }
         }
     }
@@ -272,7 +405,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         // If no roles available
         if (availableRoles.isEmpty()) {
             JOptionPane.showMessageDialog(parentView, 
-                "No roles available for your rank.",
+                "No roles available for your rank in this location.",
                 "Cannot Take Role", 
                 JOptionPane.WARNING_MESSAGE);
             return;
@@ -307,8 +440,20 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
             boolean success = controller.takeRole(selectedRole);
             
             if (success) {
-                // End turn after taking a role
+                JOptionPane.showMessageDialog(parentView,
+                    "Successfully took role: " + selectedRole,
+                    "Role Taken",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                // End turn after successfully taking a role
                 handleEndTurn();
+            } else {
+                JOptionPane.showMessageDialog(parentView,
+                    "Failed to take role: " + selectedRole + "\n" +
+                    "The role may have already been taken or completed.",
+                    "Take Role Failed",
+                    JOptionPane.ERROR_MESSAGE);
+                // Do not end turn on failed role taking
             }
         }
     }
@@ -339,7 +484,9 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         sceneInfo.append("Starring Roles:\n");
         for (RoleViewModel role : scene.getStarringRoles()) {
             String status = "";
-            if (role.isTaken()) {
+            if (role.isActed()) {
+                status = " [COMPLETED]";
+            } else if (role.isTaken()) {
                 status = " [TAKEN]";
             } else if (role.getRank() > controller.getCurrentPlayerViewModel().getRank()) {
                 status = " [RANK TOO LOW]";
@@ -356,7 +503,9 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
             sceneInfo.append("\nExtra Roles:\n");
             for (RoleViewModel role : scene.getExtraRoles()) {
                 String status = "";
-                if (role.isTaken()) {
+                if (role.isActed()) {
+                    status = " [COMPLETED]";
+                } else if (role.isTaken()) {
                     status = " [TAKEN]";
                 } else if (role.getRank() > controller.getCurrentPlayerViewModel().getRank()) {
                     status = " [RANK TOO LOW]";
@@ -403,7 +552,8 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         helpText.append("ACTING:\n");
         helpText.append("• Roll a die + rehearsal bonus\n");
         helpText.append("• If result >= budget: Success! Gain rewards and remove a shot marker\n");
-        helpText.append("• If result < budget: Failure. No reward\n\n");
+        helpText.append("• If result < budget: Failure. No reward\n");
+        helpText.append("• Once a role has been successfully acted, it's completed and cannot be acted again\n\n");
         
         helpText.append("REHEARSING:\n");
         helpText.append("• Each rehearsal adds +1 to future acting attempts\n");

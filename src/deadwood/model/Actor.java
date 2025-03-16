@@ -191,7 +191,8 @@ public class Actor {
         
         // Check if this role has already been successfully acted
         if (currentSet.hasRoleBeenActed(currentRole)) {
-            System.out.println("This role has already been shot successfully. Choose another role on this scene.");
+            System.out.println("You've already successfully completed this role. You cannot act in it again.");
+            System.out.println("You may take a different role in this scene, move to another room, or end your turn.");
             return false;
         }
         
@@ -240,6 +241,10 @@ public class Actor {
                 currentRole = null;
                 isExtraRole = false;
                 points.resetRehearsalBonus();
+            } else {
+                // Important: Let player know they completed the role but the scene continues
+                System.out.println("You've successfully completed your role, but the scene continues.");
+                System.out.println("You may take a different role in this scene or move to another room on your next turn.");
             }
             
             return true;

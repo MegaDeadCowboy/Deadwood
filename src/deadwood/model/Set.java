@@ -37,15 +37,6 @@ public class Set {
         }
         return false;
     }
-     
-    public void markRoleAsActed(String roleName) {
-        actedRoles.add(roleName);
-    }
-    
-    public boolean hasRoleBeenActed(String roleName) {
-        return actedRoles.contains(roleName);
-    }
-    
 
     public boolean isRoleAvailable(String roleName) {
         // First, check if the role exists (either in the main RoleCard or in extraRolesCard)
@@ -160,24 +151,6 @@ public class Set {
         
         return allRoles;
     }
-    public void markAllRolesAsActed() {
-        // Mark all starring roles as acted
-        if (roleCard != null) {
-            for (RoleCard.Role role : roleCard.getSceneRoles()) {
-                actedRoles.add(role.getName());
-            }
-        }
-        
-        // Mark all extra roles as acted
-        if (extraRolesCard != null) {
-            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
-                actedRoles.add(role.getName());
-            }
-        }
-        
-        // Mark the set as inactive
-        this.isActive = false;
-    }
     // Return role information
     public RoleCard.Role getRole(String roleName) {
         // Check in main roleCard first
@@ -212,7 +185,53 @@ public class Set {
         }
         return false;
     }
-    
+    // Add these methods to the Set class to improve role management
+
+/**
+ * Marks a role as acted and prevents further acting on this role
+ * 
+ * @param roleName The name of the role to mark as acted
+ */
+public void markRoleAsActed(String roleName) {
+    // Add to the acted roles set
+    if (roleName != null && !roleName.isEmpty()) {
+        actedRoles.add(roleName);
+        System.out.println("Role '" + roleName + "' marked as completed. No further acting needed on this role.");
+    }
+}
+
+    /**
+     * Checks if a role has already been successfully acted
+     * 
+     * @param roleName The name of the role to check
+     * @return true if the role has been acted, false otherwise
+     */
+    public boolean hasRoleBeenActed(String roleName) {
+        return roleName != null && actedRoles.contains(roleName);
+    }
+
+    /**
+     * Marks all roles as acted, typically called when a scene wraps
+     */
+    public void markAllRolesAsActed() {
+        // Mark all starring roles as acted
+        if (roleCard != null) {
+            for (RoleCard.Role role : roleCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark all extra roles as acted
+        if (extraRolesCard != null) {
+            for (RoleCard.Role role : extraRolesCard.getSceneRoles()) {
+                actedRoles.add(role.getName());
+            }
+        }
+        
+        // Mark the set as inactive
+        this.isActive = false;
+    }
+        
     // Get the budget for extra roles
     public int getExtraRoleBudget() {
         return extraRoleBudget;

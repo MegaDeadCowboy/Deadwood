@@ -6,6 +6,8 @@ import javax.swing.border.*;
 
 import deadwood.controller.GameController;
 import deadwood.controller.GameController.PlayerViewModel;
+import deadwood.controller.GameController.SceneViewModel;
+import deadwood.controller.GameController.RoleViewModel;
 
 /**
  * Panel for displaying current player information.
@@ -18,6 +20,7 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
     private JLabel playerStatsLabel;
     private JLabel playerRoleLabel;
     private JLabel rehearsalBonusLabel;
+    private JLabel roleStatusLabel;
 
     public PlayerInfoPanel(GameController controller) {
         this.controller = controller;
@@ -31,7 +34,7 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
             TitledBorder.TOP));
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension(260, 150));
+        setPreferredSize(new Dimension(260, 170));  // Increased height for role status
         
         // Initialize components
         initializeComponents();
@@ -54,6 +57,11 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
         playerRoleLabel = new JLabel("Role: None");
         playerRoleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
+        // Role status label (new)
+        roleStatusLabel = new JLabel("");
+        roleStatusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        roleStatusLabel.setForeground(new Color(0, 100, 0)); // Dark green
+        
         // Rehearsal bonus label
         rehearsalBonusLabel = new JLabel("Rehearsal Bonus: 0");
         rehearsalBonusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -65,6 +73,8 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
         add(playerStatsLabel);
         add(Box.createVerticalStrut(10));
         add(playerRoleLabel);
+        add(Box.createVerticalStrut(5));
+        add(roleStatusLabel);
         add(Box.createVerticalStrut(5));
         add(rehearsalBonusLabel);
         add(Box.createVerticalStrut(5));
@@ -120,11 +130,50 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
             // Update rehearsal bonus
             rehearsalBonusLabel.setText("Rehearsal Bonus: +" + player.getRehearsalBonus());
             rehearsalBonusLabel.setVisible(true);
+            
+            // Check if role has been acted
+            boolean roleActed = isRoleActed(playerRole);
+            if (roleActed) {
+                roleStatusLabel.setText("Status: COMPLETED - Cannot act again");
+                roleStatusLabel.setForeground(new Color(139, 0, 0));  // Dark red
+            } else {
+                roleStatusLabel.setText("Status: Active - Ready to act");
+                roleStatusLabel.setForeground(new Color(0, 100, 0));  // Dark green
+            }
+            roleStatusLabel.setVisible(true);
         } else {
             playerRoleLabel.setText("Role: None");
             rehearsalBonusLabel.setText("Rehearsal Bonus: 0");
             rehearsalBonusLabel.setVisible(false);
+            roleStatusLabel.setText("");
+            roleStatusLabel.setVisible(false);
         }
+    }
+    
+    /**
+     * Helper method to check if a role has been acted (completed)
+     */
+    private boolean isRoleActed(String roleName) {
+        SceneViewModel scene = controller.getCurrentSceneViewModel();
+        if (scene == null || !scene.isActive() || roleName == null) {
+            return false;
+        }
+        
+        // Check in starring roles
+        for (RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        // Check in extra roles
+        for (RoleViewModel role : scene.getExtraRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        return false;
     }
     
     // GameObserver methods
@@ -140,7 +189,8 @@ public class PlayerInfoPanel extends JPanel implements GameController.GameObserv
     
     @Override
     public void onSceneChanged(GameController.SceneViewModel scene) {
-        // Not directly relevant for player info
+        // Update to reflect any role status changes
+        updatePlayerInfo();
     }
     
     @Override

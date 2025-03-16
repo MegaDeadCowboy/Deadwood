@@ -4,6 +4,7 @@ import java.awt.*;
 import javax.swing.*;
 
 import deadwood.controller.GameController;
+import deadwood.controller.GameController.PlayerViewModel;
 
 /**
  * Main container class for the Deadwood GUI.
@@ -18,6 +19,7 @@ public class GameView extends JFrame implements GameController.GameObserver {
     private SceneInfoPanel sceneInfoPanel;
     private CastingOfficePanel castingOfficePanel;
     private JPanel sidebarPanel;
+    private JLabel gameStatusLabel;
     
     // Constants for layout dimensions
     private static final int SIDEBAR_WIDTH = 260;
@@ -65,6 +67,11 @@ public class GameView extends JFrame implements GameController.GameObserver {
         sceneInfoPanel = new SceneInfoPanel(controller);
         castingOfficePanel = new CastingOfficePanel(controller, this);
         
+        // Create game status label
+        gameStatusLabel = new JLabel("Game started with " + getPlayerCount() + " players");
+        gameStatusLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        gameStatusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
+        
         // Create sidebar container
         sidebarPanel = new JPanel();
         sidebarPanel.setLayout(new BoxLayout(sidebarPanel, BoxLayout.Y_AXIS));
@@ -80,6 +87,7 @@ public class GameView extends JFrame implements GameController.GameObserver {
         sidebarPanel.add(Box.createVerticalStrut(10));
         sidebarPanel.add(sceneInfoPanel);
         sidebarPanel.add(Box.createVerticalGlue()); // Add glue to push components to the top
+        sidebarPanel.add(gameStatusLabel);
         
         // Use a scroll pane for the sidebar in case it gets too tall
         JScrollPane sidebarScrollPane = new JScrollPane(sidebarPanel);
@@ -115,15 +123,79 @@ public class GameView extends JFrame implements GameController.GameObserver {
             boardPanel.getPreferredSize().width + SIDEBAR_WIDTH + 80,
             boardPanel.getPreferredSize().height + 100
         ));
+        
+        // Update frame title with initial game information
+        updateFrameTitle();
     }
     
     /**
      * Updates the frame title with current game information
      */
     private void updateFrameTitle() {
-        GameController.PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
         if (player != null) {
-            setTitle("Deadwood - Player " + player.getPlayerId() + "'s Turn - Rank " + player.getRank());
+            String roleInfo = "";
+            if (player.getCurrentRole() != null) {
+                roleInfo = " - Role: " + player.getCurrentRole();
+                
+                // Check if role is completed
+                boolean isRoleCompleted = isCurrentRoleCompleted();
+                if (isRoleCompleted) {
+                    roleInfo += " [COMPLETED]";
+                }
+            }
+            
+            setTitle("Deadwood - Player " + player.getPlayerId() + "'s Turn - Rank " + player.getRank() + roleInfo);
+        }
+    }
+    
+    /**
+     * Check if the current player's role has been completed
+     */
+    private boolean isCurrentRoleCompleted() {
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        if (player == null || player.getCurrentRole() == null) {
+            return false;
+        }
+        
+        String roleName = player.getCurrentRole();
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
+        
+        if (scene == null || !scene.isActive()) {
+            return false;
+        }
+        
+        // Check in starring roles
+        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        // Check in extra roles
+        for (GameController.RoleViewModel role : scene.getExtraRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get the number of players in the game
+     */
+    private int getPlayerCount() {
+        return controller.getAllPlayersViewModels().size();
+    }
+    
+    /**
+     * Update the game status label
+     */
+    private void updateGameStatus() {
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        if (player != null) {
+            gameStatusLabel.setText("Player " + player.getPlayerId() + "'s Turn - Waiting for action...");
         }
     }
     
@@ -133,6 +205,7 @@ public class GameView extends JFrame implements GameController.GameObserver {
     @Override
     public void onGameStateChanged() {
         updateFrameTitle();
+        updateGameStatus();
         revalidate();
         repaint();
     }
@@ -140,11 +213,15 @@ public class GameView extends JFrame implements GameController.GameObserver {
     @Override
     public void onPlayerChanged(GameController.PlayerViewModel player) {
         updateFrameTitle();
+        updateGameStatus();
     }
     
     @Override
     public void onSceneChanged(GameController.SceneViewModel scene) {
-        // Not directly relevant for main frame, individual panels will handle this
+        // Update the frame title if the scene change affects a role's status
+        if (isCurrentRoleCompleted()) {
+            updateFrameTitle();
+        }
     }
     
     @Override

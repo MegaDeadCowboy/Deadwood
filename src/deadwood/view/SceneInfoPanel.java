@@ -6,6 +6,7 @@ import javax.swing.border.*;
 
 import deadwood.controller.GameController;
 import deadwood.controller.GameController.SceneViewModel;
+import deadwood.controller.GameController.RoleViewModel;
 
 /**
  * Panel for displaying information about the current scene.
@@ -18,6 +19,7 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
     private JLabel sceneBudgetLabel;
     private JLabel sceneShotsLabel;
     private JTextArea sceneDescriptionArea;
+    private JLabel roleStatusLabel;
 
     public SceneInfoPanel(GameController controller) {
         this.controller = controller;
@@ -31,7 +33,7 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
             TitledBorder.TOP));
         
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        setPreferredSize(new Dimension(260, 180));
+        setPreferredSize(new Dimension(260, 200));  // Increased height to accommodate role status
         
         // Initialize components
         initializeComponents();
@@ -54,6 +56,10 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
         sceneShotsLabel = new JLabel("Shots remaining: 0");
         sceneShotsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
+        // Role status label
+        roleStatusLabel = new JLabel("Available roles: 0");
+        roleStatusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
         // Scene description area
         sceneDescriptionArea = new JTextArea(4, 20);
         sceneDescriptionArea.setEditable(false);
@@ -70,6 +76,8 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
         add(sceneBudgetLabel);
         add(Box.createVerticalStrut(5));
         add(sceneShotsLabel);
+        add(Box.createVerticalStrut(5));
+        add(roleStatusLabel);
         add(Box.createVerticalStrut(5));
         add(scrollPane);
     }
@@ -89,10 +97,42 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
         sceneShotsLabel.setText("Shots remaining: " + scene.getShotsRemaining());
         sceneDescriptionArea.setText(scene.getDescription());
         
+        // Calculate and display role statistics
+        int totalRoles = scene.getStarringRoles().size() + scene.getExtraRoles().size();
+        int availableRoles = 0;
+        int takenRoles = 0;
+        int completedRoles = 0;
+        
+        // Count starring roles status
+        for (RoleViewModel role : scene.getStarringRoles()) {
+            if (role.isActed()) {
+                completedRoles++;
+            } else if (role.isTaken()) {
+                takenRoles++;
+            } else {
+                availableRoles++;
+            }
+        }
+        
+        // Count extra roles status
+        for (RoleViewModel role : scene.getExtraRoles()) {
+            if (role.isActed()) {
+                completedRoles++;
+            } else if (role.isTaken()) {
+                takenRoles++;
+            } else {
+                availableRoles++;
+            }
+        }
+        
+        roleStatusLabel.setText(String.format("Roles: %d available, %d taken, %d completed", 
+            availableRoles, takenRoles, completedRoles));
+        
         // Make sure all components are visible
         sceneNameLabel.setVisible(true);
         sceneBudgetLabel.setVisible(true);
         sceneShotsLabel.setVisible(true);
+        roleStatusLabel.setVisible(true);
         sceneDescriptionArea.setVisible(true);
     }
 
@@ -100,6 +140,7 @@ public class SceneInfoPanel extends JPanel implements GameController.GameObserve
         sceneNameLabel.setText("No active scene");
         sceneBudgetLabel.setText("Budget: $0");
         sceneShotsLabel.setText("Shots remaining: 0");
+        roleStatusLabel.setText("Roles: none");
         sceneDescriptionArea.setText("Visit a set with an active scene to see details.");
     }
     
