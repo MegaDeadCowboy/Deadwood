@@ -459,9 +459,44 @@ public class Actor {
         }
     }
 
+   /**
+     * Checks if the player's current role has been completed (successfully acted)
+     * 
+     * @return true if the current role has been completed, false otherwise
+     */
+    public boolean isCurrentRoleCompleted() {
+        // If no role or no current room, role is not completed
+        if (currentRole == null || location.getCurrentRoom() == null) {
+            return false;
+        }
+        
+        // Get the current set
+        Room currentRoom = location.getCurrentRoom();
+        Set currentSet = currentRoom.getSet();
+        
+        // If no set or set is not active, role is not completed
+        if (currentSet == null || !currentSet.isActive()) {
+            return false;
+        }
+        
+        // Check if this role has been acted (completed)
+        return currentSet.hasRoleBeenActed(currentRole);
+    }
+
+    /**
+     * Modified abandonRole method that only allows abandoning completed roles
+     * 
+     * @return true if the role was abandoned, false otherwise
+     */
     public boolean abandonRole() {
         // Check if player has a role
         if (currentRole == null) {
+            return false;
+        }
+        
+        // Check if role is completed before allowing abandonment
+        if (!isCurrentRoleCompleted()) {
+            System.out.println("Cannot abandon an incomplete role. You must act or rehearse.");
             return false;
         }
         
@@ -473,17 +508,27 @@ public class Actor {
         
         Set currentSet = currentRoom.getSet();
         if (currentSet == null) {
-            return false;
+            // Edge case: Role exists but set is gone
+            // Just reset player state
+            String abandonedRole = currentRole;
+            currentRole = null;
+            this.isExtraRole = false;
+            points.resetRehearsalBonus();
+            System.out.println("Role was abandoned: " + abandonedRole);
+            return true;
         }
         
-        // Release the role
+        // Release the role in the set
         currentSet.releaseRole(currentRole);
-        System.out.println("Abandoning role: " + currentRole);
+        System.out.println("Abandoning completed role: " + currentRole);
         
         // Reset player role
         String abandonedRole = currentRole;
         currentRole = null;
         this.isExtraRole = false;
+        
+        // Reset rehearsal bonus when abandoning role
+        points.resetRehearsalBonus();
         
         return true;
     }

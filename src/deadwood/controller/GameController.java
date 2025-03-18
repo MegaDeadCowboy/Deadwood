@@ -469,6 +469,7 @@ public static class ShotCounterViewModel {
     
     /**
      * Move the current player to a new room
+     * Only allows movement if player has no role or has a completed role
      */
     public boolean movePlayer(String destinationRoom) {
         Actor currentPlayer = gameBoard.getCurrentPlayer();
@@ -479,6 +480,17 @@ public static class ShotCounterViewModel {
         Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
         if (currentRoom == null) {
             return false;
+        }
+        
+        // Check if player has an incomplete role - can't move
+        if (currentPlayer.getCurrentRole() != null && !currentPlayer.isCurrentRoleCompleted()) {
+            System.out.println("You cannot move while working on an incomplete role. You must act or rehearse.");
+            return false;
+        }
+        
+        // If player has a completed role, abandon it before moving
+        if (currentPlayer.getCurrentRole() != null) {
+            currentPlayer.abandonRole();
         }
         
         // Validate the move
@@ -498,50 +510,80 @@ public static class ShotCounterViewModel {
         
         return success;
     }
-    
+    /**
+     * Have the current player take a role
+     * Only allows taking a role if player has no role or has a completed role
+     */
+    public boolean takeRole(String roleName) {
+        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        if (currentPlayer == null) {
+            return false;
+        }
+        
+        // Check if player has an incomplete role
+        if (currentPlayer.getCurrentRole() != null && !currentPlayer.isCurrentRoleCompleted()) {
+            System.out.println("You cannot take a new role while working on an incomplete role. You must act or rehearse.");
+            return false;
+        }
+        
+        // Get the current room and set
+        Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
+        if (currentRoom == null) {
+            System.out.println("Error: Player is not in a valid room.");
+            return false;
+        }
+        
+        Set currentSet = currentRoom.getSet();
+        if (currentSet == null || !currentSet.isActive()) {
+            System.out.println("There is no active set in this room.");
+            return false;
+        }
+        
+        // Check if this role has already been acted
+        if (currentSet.hasRoleBeenActed(roleName)) {
+            System.out.println("This role has already been completed and cannot be taken.");
+            return false;
+        }
+        
+        // If player has a completed role, abandon it first
+        if (currentPlayer.getCurrentRole() != null) {
+            currentPlayer.abandonRole();
+        }
+        
+        boolean success = currentPlayer.inputRole(roleName);
+        
+        if (success) {
+            notifyObservers();
+            notifyPlayerChanged(getCurrentPlayerViewModel());
+            notifySceneChanged(getCurrentSceneViewModel());
+        }
+        
+        return success;
+    }
    /**
- * Have the current player take a role
- */
-public boolean takeRole(String roleName) {
-    Actor currentPlayer = gameBoard.getCurrentPlayer();
-    if (currentPlayer == null) {
-        return false;
+     * Have the current player abandon their role
+     */
+    public boolean abandonRole() {
+        Actor currentPlayer = gameBoard.getCurrentPlayer();
+        if (currentPlayer == null) {
+            return false;
+        }
+        
+        // Check if player has a role to abandon
+        if (currentPlayer.getCurrentRole() == null) {
+            return false;
+        }
+        
+        boolean success = currentPlayer.abandonRole();
+        
+        if (success) {
+            notifyObservers();
+            notifyPlayerChanged(getCurrentPlayerViewModel());
+            notifySceneChanged(getCurrentSceneViewModel());
+        }
+        
+        return success;
     }
-    
-    // Get the current room and set
-    Room currentRoom = currentPlayer.getLocation().getCurrentRoom();
-    if (currentRoom == null) {
-        System.out.println("Error: Player is not in a valid room.");
-        return false;
-    }
-    
-    Set currentSet = currentRoom.getSet();
-    if (currentSet == null || !currentSet.isActive()) {
-        System.out.println("There is no active set in this room.");
-        return false;
-    }
-    
-    // Check if this role has already been acted
-    if (currentSet.hasRoleBeenActed(roleName)) {
-        System.out.println("This role has already been completed and cannot be taken.");
-        return false;
-    }
-    
-    // If player has a role, abandon it first
-    if (currentPlayer.getCurrentRole() != null) {
-        currentPlayer.abandonRole();
-    }
-    
-    boolean success = currentPlayer.inputRole(roleName);
-    
-    if (success) {
-        notifyObservers();
-        notifyPlayerChanged(getCurrentPlayerViewModel());
-        notifySceneChanged(getCurrentSceneViewModel());
-    }
-    
-    return success;
-}
     
     /**
      * Have the current player act in their role

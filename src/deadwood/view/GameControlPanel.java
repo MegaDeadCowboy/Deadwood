@@ -24,6 +24,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
     private JButton endTurnButton;
     private JButton viewSceneButton;
     private JButton helpButton;
+    private JButton abandonRoleButton; // New button for abandoning role
     
     public GameControlPanel(GameController controller, GameView parentView) {
         this.controller = controller;
@@ -37,8 +38,8 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
             TitledBorder.CENTER,
             TitledBorder.TOP));
         
-        setLayout(new GridLayout(7, 1, 0, 5));
-        setPreferredSize(new Dimension(260, 250));
+        setLayout(new GridLayout(8, 1, 0, 5)); // Increased row count for the new button
+        setPreferredSize(new Dimension(260, 280)); // Increased height for the new button
         
         // Initialize components
         initializeComponents();
@@ -56,6 +57,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         rehearseButton = createButton("Rehearse", e -> handleRehearse());
         moveButton = createButton("Move", e -> handleMove());
         takeRoleButton = createButton("Take Role", e -> handleTakeRole());
+        abandonRoleButton = createButton("Abandon Role", e -> handleAbandonRole()); // New button
         endTurnButton = createButton("End Turn", e -> handleEndTurn());
         
         // Create information buttons
@@ -67,6 +69,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         add(rehearseButton);
         add(moveButton);
         add(takeRoleButton);
+        add(abandonRoleButton); // Add the new button
         add(viewSceneButton);
         add(helpButton);
         add(endTurnButton);
@@ -104,23 +107,25 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         
         String currentRole = player.getCurrentRole();
         String currentLocation = player.getCurrentLocation();
+        boolean isRoleCompleted = isCurrentRoleCompleted();
         
-        // ACT - only enabled if player has a role and the role hasn't been completed
-        actButton.setEnabled(currentRole != null);
+        // ACT - only enabled if player has a role and it's not completed
+        actButton.setEnabled(currentRole != null && !isRoleCompleted);
         
-        // REHEARSE - only enabled if player has a role
-        rehearseButton.setEnabled(currentRole != null);
+        // REHEARSE - only enabled if player has a role and it's not completed
+        rehearseButton.setEnabled(currentRole != null && !isRoleCompleted);
         
-        // MOVE - only enabled if player does NOT have a role
-        moveButton.setEnabled(currentRole == null);
+        // MOVE - only enabled if player does NOT have a role or has a completed role
+        moveButton.setEnabled(currentRole == null || isRoleCompleted);
         
-        // TAKE ROLE - enabled if there are available roles for this player
+        // TAKE ROLE - enabled if there are available roles and player doesn't have a role 
+        // or has a completed role
         boolean canTakeRole = controller.canTakeRoles();
-        takeRoleButton.setEnabled(canTakeRole);
+        takeRoleButton.setEnabled((currentRole == null || isRoleCompleted) && canTakeRole);
         
         // VIEW SCENE - enabled if there's an active scene in the current room
         boolean hasActiveScene = controller.getCurrentSceneViewModel() != null && 
-                               controller.getCurrentSceneViewModel().isActive();
+                            controller.getCurrentSceneViewModel().isActive();
         viewSceneButton.setEnabled(hasActiveScene);
         
         // HELP - always enabled
@@ -129,7 +134,40 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         // END TURN - always enabled
         endTurnButton.setEnabled(true);
     }
-    
+
+    /**
+     * Checks if the current player's role has been completed
+     */
+    private boolean isCurrentRoleCompleted() {
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        if (player == null || player.getCurrentRole() == null) {
+            return false;
+        }
+        
+        String roleName = player.getCurrentRole();
+        GameController.SceneViewModel scene = controller.getCurrentSceneViewModel();
+        
+        if (scene == null || !scene.isActive()) {
+            return false;
+        }
+        
+        // Check in starring roles
+        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        // Check in extra roles
+        for (GameController.RoleViewModel role : scene.getExtraRoles()) {
+            if (role.getName().equals(roleName) && role.isActed()) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+   
     /**
      * Handles the ACT button click
      */
@@ -158,30 +196,12 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         // Check if this role has already been successfully acted
         // This requires examining the scene's roles
         String currentRole = player.getCurrentRole();
-        boolean isRoleActed = false;
-        
-        // Check starring roles
-        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
-            if (role.getName().equals(currentRole) && role.isActed()) {
-                isRoleActed = true;
-                break;
-            }
-        }
-        
-        // Check extra roles if not found in starring roles
-        if (!isRoleActed) {
-            for (GameController.RoleViewModel role : scene.getExtraRoles()) {
-                if (role.getName().equals(currentRole) && role.isActed()) {
-                    isRoleActed = true;
-                    break;
-                }
-            }
-        }
+        boolean isRoleActed = isCurrentRoleCompleted();
         
         if (isRoleActed) {
             JOptionPane.showMessageDialog(parentView,
                 "You've already successfully completed this role! You cannot act in it again.\n" +
-                "You may take a different role in this scene, move to another room, or end your turn.",
+                "You may abandon this role to take a different role or move to another room.",
                 "Role Completed",
                 JOptionPane.INFORMATION_MESSAGE);
             return;
@@ -200,11 +220,19 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
                     "Scene Wrapped",
                     JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(parentView,
-                    "Acting success! You've successfully completed this role.\n" +
-                    "You may take a different role in this scene on your next turn.",
-                    "Acting Success",
-                    JOptionPane.INFORMATION_MESSAGE);
+                // Check if role is now completed
+                if (isCurrentRoleCompleted()) {
+                    JOptionPane.showMessageDialog(parentView,
+                        "Acting success! You've successfully completed this role.\n" +
+                        "You may abandon this role to take a different role or move to another room.",
+                        "Acting Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(parentView,
+                        "Acting success!",
+                        "Acting Success",
+                        JOptionPane.INFORMATION_MESSAGE);
+                }
             }
             
             // End turn after successful acting
@@ -250,24 +278,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         }
         
         // Check if this role has already been successfully acted
-        String currentRole = player.getCurrentRole();
-        boolean isRoleActed = false;
-        
-        for (GameController.RoleViewModel role : scene.getStarringRoles()) {
-            if (role.getName().equals(currentRole) && role.isActed()) {
-                isRoleActed = true;
-                break;
-            }
-        }
-        
-        if (!isRoleActed) {
-            for (GameController.RoleViewModel role : scene.getExtraRoles()) {
-                if (role.getName().equals(currentRole) && role.isActed()) {
-                    isRoleActed = true;
-                    break;
-                }
-            }
-        }
+        boolean isRoleActed = isCurrentRoleCompleted();
         
         if (isRoleActed) {
             JOptionPane.showMessageDialog(parentView,
@@ -283,7 +294,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         
         // Determine the appropriate budget and role type
         for (GameController.RoleViewModel role : scene.getStarringRoles()) {
-            if (role.getName().equals(currentRole)) {
+            if (role.getName().equals(player.getCurrentRole())) {
                 budget = scene.getBudget();
                 isExtraRole = false;
                 break;
@@ -333,6 +344,22 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
      * Handles the MOVE button click
      */
     private void handleMove() {
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        
+        // Check if player has a role that isn't completed
+        if (player.getCurrentRole() != null && !isCurrentRoleCompleted()) {
+            int response = JOptionPane.showConfirmDialog(
+                parentView,
+                "Moving will cause you to abandon your current role. Continue?",
+                "Abandon Role?",
+                JOptionPane.YES_NO_OPTION
+            );
+            
+            if (response != JOptionPane.YES_OPTION) {
+                return;
+            }
+        }
+        
         List<String> adjacentRooms = controller.getAdjacentRooms();
         
         if (adjacentRooms.isEmpty()) {
@@ -386,17 +413,23 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         
         // Check if player already has a role
         if (player.getCurrentRole() != null) {
-            int response = JOptionPane.showConfirmDialog(
-                parentView, 
-                "You already have the role: " + player.getCurrentRole() + 
-                "\nDo you want to abandon it and take a new role?",
-                "Abandon Current Role?",
-                JOptionPane.YES_NO_OPTION
-            );
+            // Check if the current role is completed
+            boolean isRoleActed = isCurrentRoleCompleted();
             
-            if (response != JOptionPane.YES_OPTION) {
-                return;
+            if (!isRoleActed) {
+                int response = JOptionPane.showConfirmDialog(
+                    parentView, 
+                    "You already have the role: " + player.getCurrentRole() + 
+                    "\nDo you want to abandon it and take a new role?",
+                    "Abandon Current Role?",
+                    JOptionPane.YES_NO_OPTION
+                );
+                
+                if (response != JOptionPane.YES_OPTION) {
+                    return;
+                }
             }
+            // If role is completed, allow taking a new role without confirmation
         }
         
         // Get available roles
@@ -458,6 +491,58 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         }
     }
     
+    /**
+     * Handles the ABANDON ROLE button click
+     */
+    private void handleAbandonRole() {
+        PlayerViewModel player = controller.getCurrentPlayerViewModel();
+        
+        if (player.getCurrentRole() == null) {
+            JOptionPane.showMessageDialog(parentView,
+                "You don't currently have a role to abandon.",
+                "No Role",
+                JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        
+        String roleName = player.getCurrentRole();
+        boolean isCompleted = isCurrentRoleCompleted();
+        
+        int response = JOptionPane.showConfirmDialog(
+            parentView,
+            "Do you want to abandon your role as " + roleName + "?" +
+            (isCompleted ? "\n(This role is already completed)" : ""),
+            "Abandon Role?",
+            JOptionPane.YES_NO_OPTION
+        );
+        
+        if (response != JOptionPane.YES_OPTION) {
+            return;
+        }
+        
+        // Abandon the role using the controller
+        // We need to add a dedicated method for this in GameController
+        boolean success = abandonPlayerRole();
+        
+        if (success) {
+            JOptionPane.showMessageDialog(parentView,
+                "Successfully abandoned role: " + roleName,
+                "Role Abandoned",
+                JOptionPane.INFORMATION_MESSAGE);
+            
+            // Update UI but don't end turn - abandoning a role is a free action
+            updateButtonStates();
+        } else {
+            JOptionPane.showMessageDialog(parentView,
+                "Failed to abandon role. This is likely a bug.",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private boolean abandonPlayerRole() {
+        return controller.abandonRole();
+    }
     /**
      * Handles the VIEW SCENE button click
      */
@@ -547,6 +632,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         helpText.append("• TAKE ROLE: Take an available role on the current set\n");
         helpText.append("• ACT: Attempt to act in your current role\n");
         helpText.append("• REHEARSE: Increase your chances of successful acting\n");
+        helpText.append("• ABANDON ROLE: Leave your current role without taking another action\n");
         helpText.append("• UPGRADE: Increase your rank at the Casting Office\n\n");
         
         helpText.append("ACTING:\n");
@@ -565,6 +651,11 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         helpText.append("• Starring roles divide dice equal to the budget\n");
         helpText.append("• Extra roles get dollars equal to their rank\n\n");
         
+        helpText.append("COMPLETED ROLES:\n");
+        helpText.append("• After successfully acting in a role, it's marked as completed\n");
+        helpText.append("• You can't act or rehearse in a completed role\n");
+        helpText.append("• You must either abandon the role or end your turn\n\n");
+        
         helpText.append("GAME END:\n");
         helpText.append("• Game ends after a set number of days\n");
         helpText.append("• Final score = dollars + credits + (5 × rank)\n\n");
@@ -574,6 +665,7 @@ public class GameControlPanel extends JPanel implements GameController.GameObser
         helpText.append("• REHEARSE: Practice for your current role (+1 bonus)\n");
         helpText.append("• MOVE: Travel to an adjacent room\n");
         helpText.append("• TAKE ROLE: Take an available role on the current set\n");
+        helpText.append("• ABANDON ROLE: Leave your current role without moving\n");
         helpText.append("• VIEW SCENE: See details about the current scene\n");
         helpText.append("• HELP: Display this help information\n");
         helpText.append("• END TURN: Finish your turn\n");
