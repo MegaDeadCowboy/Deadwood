@@ -167,7 +167,7 @@ public class BoardXMLParser {
         Element trailerElement = (Element) root.getElementsByTagName("trailer").item(0);
         if (trailerElement != null) {
             List<String> trailerNeighbors = parseNeighbors(trailerElement);
-            Trailer trailerObj = new Trailer(trailerNeighbors);
+            Trailer trailerObj = Trailer.getInstance(trailerNeighbors);
             rooms.put("trailer", trailerObj);
         }
 

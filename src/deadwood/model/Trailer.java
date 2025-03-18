@@ -7,19 +7,74 @@ import deadwood.model.Actor;
 
 import deadwood.controller.GameBoard;
 
-// Starting room
+/**
+ * Starting room implemented as a Singleton
+ */
 public class Trailer extends Room {
+    // Singleton instance
+    private static Trailer instance = null;
     
-    public Trailer() {
+    /**
+     * Private constructor to prevent instantiation from outside
+     */
+    private Trailer() {
         super("Trailer", new ArrayList<>());
     }
     
-    public Trailer(List<String> adjacentRooms) {
-        super("Trailer", adjacentRooms);
-        
+    /**
+     * Private constructor with adjacent rooms for initialization
+     */
+    private Trailer(List<String> adjacentRooms) {
+        super("Trailer", adjacentRooms != null ? adjacentRooms : new ArrayList<>());
     }
     
-   // Used to reset players at the end of a day
+    /**
+     * Get the singleton instance of Trailer
+     * @return The singleton Trailer instance
+     */
+    public static synchronized Trailer getInstance() {
+        if (instance == null) {
+            instance = new Trailer();
+        }
+        return instance;
+    }
+    
+    /**
+     * Get the singleton instance with initialized adjacent rooms
+     * @param adjacentRooms List of adjacent room IDs
+     * @return The singleton Trailer instance
+     */
+    public static synchronized Trailer getInstance(List<String> adjacentRooms) {
+        if (instance == null) {
+            instance = new Trailer(adjacentRooms);
+        } else if (adjacentRooms != null && !adjacentRooms.isEmpty()) {
+            // Update adjacent rooms if instance already exists
+            instance.updateAdjacentRooms(adjacentRooms);
+        }
+        return instance;
+    }
+    
+    /**
+     * Update the adjacent rooms list
+     * @param adjacentRooms New list of adjacent room IDs
+     */
+    private void updateAdjacentRooms(List<String> adjacentRooms) {
+        this.adjacentRooms.clear();
+        if (adjacentRooms != null) {
+            this.adjacentRooms.addAll(adjacentRooms);
+        }
+    }
+    
+    /**
+     * Reset the singleton instance (primarily for testing)
+     */
+    public static void resetInstance() {
+        instance = null;
+    }
+    
+    /**
+     * Used to reset players at the end of a day
+     */
     public void resetPlayerLocations(List<Actor> players, GameBoard gameBoard) {
         Room trailerRoom = gameBoard.getRoomByID("trailer");
     
