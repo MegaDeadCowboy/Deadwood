@@ -15,7 +15,7 @@ This compiles all Java files in the directory.
 ### 2 Run the Game
 Once compiled, start the game by running:
 ```sh
-java Deadwood <numPlayers>
+java Deadwood <numPlayers> <GUI or PrintInterface> *GUI is default*
 ```
 Replace `<numPlayers>` with a number between **2 and 8** (e.g., `java Deadwood 4`).
 
