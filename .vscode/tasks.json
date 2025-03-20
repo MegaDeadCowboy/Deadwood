@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile Java",
+            "type": "shell",
+            "command": "javac -d bin -cp src $(find src -name \"*.java\")",
+            "problemMatcher": ["$javac"]
+        },
+        {
+            "label": "Run Game",
+            "type": "shell",
+            "command": "java -cp bin deadwood.view.GameView",
+            "problemMatcher": []
+        }
+    ]
+}

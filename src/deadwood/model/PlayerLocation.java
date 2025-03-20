@@ -7,38 +7,39 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Model class that tracks player locations and provides information about room positions.
+ * Model class that tracks player locations and provides information about room
+ * positions.
  */
 public class PlayerLocation {
     private int playerID;
     private int roomID;
     private boolean onRole;
     private Room currentRoom;
-    
+
     // Store room positions
     private static final Map<String, Point> ROOM_POSITIONS;
-    
+
     // Store rooms that can have scenes
     private static final String[] SCENE_ROOMS = {
-        "main street", "saloon", "bank", "church", "hotel", 
-        "ranch", "general store", "jail", "train station", "secret hideout"
+            "main street", "saloon", "bank", "church", "hotel",
+            "ranch", "general store", "jail", "train station", "secret hideout"
     };
-    
+
     // Initialize the room positions
     static {
         Map<String, Point> positions = new HashMap<>();
-        positions.put("trailer", new Point(991, 248));
-        positions.put("office", new Point(991, 452));
-        positions.put("train station", new Point(114, 69));
-        positions.put("secret hideout", new Point(116, 432));
-        positions.put("church", new Point(639, 432));
-        positions.put("hotel", new Point(908, 432));
-        positions.put("main street", new Point(637, 69));
-        positions.put("jail", new Point(909, 69));
-        positions.put("general store", new Point(239, 165));
-        positions.put("ranch", new Point(372, 249));
-        positions.put("bank", new Point(495, 249));
-        positions.put("saloon", new Point(628, 249));
+        positions.put("trailer", new Point(991, 248)); // good
+        positions.put("casting office", new Point(10, 450));
+        positions.put("train station", new Point(10, 190));
+        positions.put("secret hideout", new Point(10, 850)); // good
+        positions.put("church", new Point(600, 850)); // good
+        positions.put("hotel", new Point(950, 850)); // good
+        positions.put("main street", new Point(950, 150)); // good
+        positions.put("jail", new Point(245, 150)); // good
+        positions.put("general store", new Point(350, 400)); // good
+        positions.put("ranch", new Point(245, 590)); // good
+        positions.put("bank", new Point(600, 590)); // good
+        positions.put("saloon", new Point(628, 400)); // good
         ROOM_POSITIONS = Collections.unmodifiableMap(positions);
     }
 
@@ -48,7 +49,7 @@ public class PlayerLocation {
         this.onRole = false;
         this.currentRoom = null;
     }
-    
+
     /**
      * Validates if a player can move to a destination room
      * 
@@ -68,7 +69,7 @@ public class PlayerLocation {
         }
         return true;
     }
-    
+
     /**
      * Updates the player's location to a new room
      * 
@@ -81,7 +82,7 @@ public class PlayerLocation {
         }
         this.currentRoom = newRoom;
     }
-    
+
     /**
      * Gets the room position for the specified room ID
      * 
@@ -92,20 +93,20 @@ public class PlayerLocation {
         if (roomID == null) {
             return null;
         }
-        
+
         Point position = ROOM_POSITIONS.get(roomID.toLowerCase());
         if (position == null) {
             return null;
         }
-        
+
         // Return a copy to prevent modification of the original
         return new Point(position);
     }
-    
+
     /**
      * Gets a scaled room position for the specified room ID
      * 
-     * @param roomID The room ID to get the position for (case insensitive)
+     * @param roomID      The room ID to get the position for (case insensitive)
      * @param scaleFactor The scale factor to apply
      * @return The scaled position of the room or null if not found
      */
@@ -114,13 +115,12 @@ public class PlayerLocation {
         if (originalPosition == null) {
             return null;
         }
-        
+
         return new Point(
-            (int)(originalPosition.x * scaleFactor),
-            (int)(originalPosition.y * scaleFactor)
-        );
+                (int) (originalPosition.x * scaleFactor),
+                (int) (originalPosition.y * scaleFactor));
     }
-    
+
     /**
      * Gets all room positions as a map
      * 
@@ -129,7 +129,7 @@ public class PlayerLocation {
     public static Map<String, Point> getAllRoomPositions() {
         return ROOM_POSITIONS;
     }
-    
+
     /**
      * Gets the IDs of rooms that can have scenes
      * 
@@ -138,7 +138,7 @@ public class PlayerLocation {
     public static String[] getSceneRoomIDs() {
         return SCENE_ROOMS.clone(); // Return a copy to prevent modification
     }
-    
+
     /**
      * Gets the current room
      * 
@@ -147,7 +147,7 @@ public class PlayerLocation {
     public Room getCurrentRoom() {
         return currentRoom;
     }
-    
+
     /**
      * Gets the player ID
      * 
@@ -156,7 +156,7 @@ public class PlayerLocation {
     public int getPlayerID() {
         return playerID;
     }
-    
+
     /**
      * Gets the room ID
      * 
@@ -165,7 +165,7 @@ public class PlayerLocation {
     public int getRoomID() {
         return roomID;
     }
-    
+
     /**
      * Checks if the player is on a role
      * 
