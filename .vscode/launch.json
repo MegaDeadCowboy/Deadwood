@@ -7,6 +7,14 @@
         "configurations": [
             {
                 "type": "java",
+                "name": "Deadwood",
+                "args": "2",
+                "request": "launch",
+                "mainClass": "deadwood.controller.Deadwood",
+                "projectName": "Deadwood_61c884c"
+            },
+            {
+                "type": "java",
                 "request": "launch",
                 "mainClass": "deadwood.view.GameView",
                 "projectName": "Deadwood",
